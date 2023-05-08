@@ -81,9 +81,7 @@ local function create_workspace(rootdir, user_data, timestamp)
   file.write_file(datadir .. paths.sep() .. '.gitignore',
     'session\n'
     .. 'Session.vim\n'
-    .. 'session.vim\n'
     .. 'PreSession.vim\n'
-    .. 'presession.vim\n'
     .. 'userdata.json\n'
     .. 'trailblazer\n')
 
