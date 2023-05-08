@@ -1,0 +1,18 @@
+---@meta _
+
+---@class HookspaceWorkspace
+---@field datadir string where workspace-specific files are stored
+---@field rootdir string root dir of workspace
+
+---@alias HookspaceUserData table<string|number, any>
+---@alias HookspaceHook function(HookspaceWorkspace, HookspaceUserdata): nil|boolean
+
+---@class HookspaceOptions
+---@field verbose integer from 0..
+---@field on_create nil|HookspaceHook|HookspaceHook[]
+---@field on_delete nil|HookspaceHook|HookspaceHook[]
+---@field on_open nil|HookspaceHook|HookspaceHook[]
+---@field on_close nil|HookspaceHook|HookspaceHook[]
+
+---@class HookspaceWorkspaceMetadata
+
