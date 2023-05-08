@@ -8,10 +8,8 @@ function M.on_open(workspace_info, user_data)
 end
 
 function M.on_close(workspace_info, user_data)
-  if old_global_cwd then
-    vim.api.nvim_set_current_dir(old_global_cwd)
-    old_global_cwd = nil
-  end
+  vim.api.nvim_set_current_dir(old_global_cwd or '~')
+  old_global_cwd = nil
 end
 
 return M
