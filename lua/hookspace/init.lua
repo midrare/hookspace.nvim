@@ -45,7 +45,7 @@ end
 function M.init(path, userdata)
   assert(type(path) == "string", "workspace path must be of type string")
   userdata = userdata or {}
-  workspaces.create(path, userdata, os.time())
+  workspaces.init(path, userdata, os.time())
 end
 
 
@@ -200,8 +200,7 @@ function M.setup(opts)
     state.verbose = opts.verbose
   end
 
-  state.on_create = opts.on_create or state.on_create
-  state.on_delete = opts.on_delete or state.on_delete
+  state.on_init = opts.on_init or state.on_init
   state.on_open = opts.on_open or state.on_open
   state.on_close = opts.on_close or state.on_close
 
