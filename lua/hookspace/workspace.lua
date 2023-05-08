@@ -33,6 +33,7 @@ local function run_hooks(hooks, ws_meta, user_data)
       end
     end
   elseif type(hooks) == 'string' then
+    ---@diagnostic disable-next-line: param-type-mismatch
     local status_ok, error_msg = pcall(vim.cmd, hooks)
     if not status_ok then
       notify.error('Failed to run hook "' .. vim.inspect(hooks) .. '"')
@@ -77,6 +78,15 @@ local function create_workspace(rootdir, user_data, timestamp)
 
   file.write_file(datadir .. paths.sep() .. '.notags')
   file.write_file(datadir .. paths.sep() .. '.ignore', '*')
+  file.write_file(datadir .. paths.sep() .. '.gitignore',
+    'Session.vim\n'
+    .. 'session.vim\n'
+    .. 'PreSession.vim\n'
+    .. 'presession.vim\n'
+    .. 'userdata.json\n'
+    .. 'trailblazer\n'
+    .. 'TrailBlazer\n'
+    .. 'Trailblazer\n')
 
   run_hooks(state.on_create, {
     rootdir = rootdir,
