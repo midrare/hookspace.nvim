@@ -217,7 +217,7 @@ end
 
 ---@param rootdir string path to workspace root dir
 ---@param user_data? HookspaceUserData initial user data
----@param timestamp integer epoch ms to record as last access time
+---@param timestamp integer epoch sec to record as last access time
 function M.create(rootdir, user_data, timestamp)
   assert(type(rootdir) == 'string', 'type of workspace path must be string')
   assert(type(user_data) == 'table', 'type of user data must be table')
@@ -244,7 +244,7 @@ function M.move(src, target)
 end
 
 ---@param rootdir string path to root of workspace
----@param timestamp integer epoch ms to record as last access time
+---@param timestamp integer epoch sec to record as last access time
 function M.open(rootdir, timestamp)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
@@ -252,7 +252,7 @@ function M.open(rootdir, timestamp)
   open_workspace(p, timestamp)
 end
 
----@param timestamp integer epoch ms to record as last access time
+---@param timestamp integer epoch sec to record as last access time
 function M.close(timestamp)
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
   close_workspace(timestamp)
