@@ -14,5 +14,6 @@
 ---@field on_open nil|HookspaceHook|HookspaceHook[]
 ---@field on_close nil|HookspaceHook|HookspaceHook[]
 
----@class HookspaceWorkspaceMetadata
-
+---@class HookspaceRecord
+---@field last_accessed integer timestamp of last access
+---@field rootdir string path to workspace root

@@ -102,7 +102,7 @@ end
 
 --- Write metadata for a workspace
 --- @param workspace string path to workspace directory or `nil` for current workspace
---- @param metadata HookspaceWorkspaceMetadata the metadata to write
+--- @param metadata HookspaceWorkspace the metadata to write
 function M.write_metadata(workspace, metadata)
   if not workspace and not state.current_root_dirpath then
     notify.error(
