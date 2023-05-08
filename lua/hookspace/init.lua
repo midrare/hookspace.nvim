@@ -40,11 +40,11 @@ end
 --- Create a new workspace at the given path
 --- If present, an already-extant workspace will be overwrittten.
 --- @param path string directory of workspace
---- @param user_data? HookspaceUserData initial value of user data (optional)
-function M.create(path, user_data)
+--- @param userdata? HookspaceUserData initial value of user data (optional)
+function M.create(path, userdata)
   assert(type(path) == "string", "workspace path must be of type string")
-  user_data = user_data or {}
-  workspaces.create(path, user_data, os.time())
+  userdata = userdata or {}
+  workspaces.create(path, userdata, os.time())
 end
 
 --- Delete a workspace from the given directory
@@ -68,13 +68,13 @@ function M.get_current_workspace()
 end
 
 --- Get history of recently-accessed workspaces
---- @return table workspaces containing workspace information
+--- @return HookspaceWorkspace[] workspaces containing workspace information
 function M.get_history(sort_by)
   return history.get_entries(sort_by)
 end
 
 --- Get only still-valid history entries
---- @return table workspaces containing workspace information
+--- @return HookspaceWorkspace[] workspaces containing workspace information
 function M.get_valid_history(sort_by)
   return history.get_valid_entries(sort_by)
 end
@@ -144,8 +144,8 @@ end
 
 --- Write user data for a workspace
 --- @param workspace? HookspaceWorkspace path to workspace directory or `nil` for current workspace
---- @param user_data HookspaceUserData the user data to write
-function M.write_user_data(workspace, user_data)
+--- @param userdata HookspaceUserData the user data to write
+function M.write_user_data(workspace, userdata)
   if not workspace and not state.current_root_dirpath then
     notify.error(
       "Cannot write user data; no workspace specified "
@@ -160,7 +160,7 @@ function M.write_user_data(workspace, user_data)
     root = paths.canonical(workspace)
   end
 
-  workspaces.write_user_data(root, user_data)
+  workspaces.write_user_data(root, userdata)
 end
 
 --- Check if the directory contains a workspace
@@ -265,7 +265,8 @@ function M.picker(opts)
     :find()
 end
 
----@param opts HookspaceOptions setup options
+--- Prepare hookspace for use
+---@param opts HookspaceOptions options
 function M.setup(opts)
   if opts.verbose ~= nil and type(opts.verbose) == "number" then
     state.verbose = opts.verbose
