@@ -252,12 +252,16 @@ function M.get_current_data_dir()
   return nil
 end
 
-function M.contains_workspace(rootdir)
+---@param rootdir string path to root of workspace
+---@return boolean is_workspace true if is root dir of a workspace
+function M.is_workspace(rootdir)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local datadir = rootdir .. paths.sep() .. state.data_dirname
   return vim.fn.isdirectory(datadir) == 1
 end
 
+---@param rootdir string path to root of workspace
+---@return HookspaceWorkspace? workspace info
 function M.read_metadata(rootdir)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir
@@ -268,6 +272,8 @@ function M.read_metadata(rootdir)
   return file.read_json(p)
 end
 
+---@param rootdir string path to root of workspace
+---@param metadata HookspaceWorkspace workspace info
 function M.write_metadata(rootdir, metadata)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir
