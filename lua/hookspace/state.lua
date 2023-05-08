@@ -13,8 +13,7 @@ module.user_data_filename = "userdata.json"
 
 module.verbose = 1
 
-module.on_create = {}
-module.on_delete = {}
+module.on_init = {}
 module.on_open = {}
 module.on_close = {}
 

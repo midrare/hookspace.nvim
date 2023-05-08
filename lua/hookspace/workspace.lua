@@ -52,7 +52,7 @@ end
 ---@param rootdir string
 ---@param userdata HookspaceUserData
 ---@param timestamp integer
-local function create_workspace(rootdir, userdata, timestamp)
+local function init_workspace(rootdir, userdata, timestamp)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   assert(type(userdata) == 'table', 'user data must be of type table')
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
@@ -91,40 +91,12 @@ local function create_workspace(rootdir, userdata, timestamp)
     .. 'userdata.json\n'
     .. 'trailblazer\n')
 
-  run_hooks(state.on_create, {
+  run_hooks(state.on_init, {
     rootdir = rootdir,
     datadir = datadir,
   }, userdata)
   file.write_json(userdatafile, userdata)
   history.update(rootdir, timestamp)
-end
-
----@param rootdir string
-local function delete_workspace(rootdir)
-  assert(type(rootdir) == 'string', 'workspace path must be of type string')
-
-  local datadir = rootdir .. paths.sep() .. state.data_dirname
-  local metafile = datadir .. paths.sep() .. state.metadata_filename
-  local userdatafile = datadir .. paths.sep() .. state.user_data_filename
-
-  if vim.fn.isdirectory(datadir) == 0 then
-    error('cannot delete non-existent workspace "' .. datadir .. '"')
-    return
-  end
-
-  local user_data = file.read_json(userdatafile) or {}
-  run_hooks(state.on_delete, {
-    rootdir = rootdir,
-    datadir = datadir,
-  }, user_data)
-  history.delete(rootdir)
-  if
-    datadir
-    and not datadir:match('^[\\/]+$')
-    and not datadir:match('^[%a]:[\\/]+$')
-  then
-    vim.fn.delete(datadir, 'rf')
-  end
 end
 
 ---@param src_rootdir string
@@ -218,19 +190,12 @@ end
 ---@param rootdir string path to workspace root dir
 ---@param user_data? HookspaceUserData initial user data
 ---@param timestamp integer epoch sec to record as last access time
-function M.create(rootdir, user_data, timestamp)
+function M.init(rootdir, user_data, timestamp)
   assert(type(rootdir) == 'string', 'type of workspace path must be string')
   assert(type(user_data) == 'table', 'type of user data must be table')
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
   local p = paths.canonical(rootdir)
-  create_workspace(p, user_data, timestamp)
-end
-
----@param rootdir string path to workspace root dir
-function M.delete(rootdir)
-  assert(type(rootdir) == 'string', 'workspace path must be of type string')
-  local p = paths.canonical(rootdir)
-  delete_workspace(p)
+  init_workspace(p, user_data, timestamp)
 end
 
 ---@param src string path to old workspace root dir

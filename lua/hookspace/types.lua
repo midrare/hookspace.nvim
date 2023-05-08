@@ -9,8 +9,7 @@
 
 ---@class HookspaceOptions
 ---@field verbose integer from 0..
----@field on_create nil|HookspaceHook|HookspaceHook[]
----@field on_delete nil|HookspaceHook|HookspaceHook[]
+---@field on_init nil|HookspaceHook|HookspaceHook[]
 ---@field on_open nil|HookspaceHook|HookspaceHook[]
 ---@field on_close nil|HookspaceHook|HookspaceHook[]
 
