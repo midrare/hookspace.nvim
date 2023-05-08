@@ -34,11 +34,8 @@ require('hookspace').setup({
 
 ### Commands
 
- - `:HookspaceCreate ~/hello_world`
- - `:HookspaceDelete ~/hello_world`  (only deletes workspace data; actual files not affected)
-
+ - `:HookspaceInit ~/hello_world`
  - `:HookspaceOpen ~/hello_world`
  - `:HookspaceClose`
  - `:HookspaceList`
  - `:HookspaceInfo`
- - `:HookspacePicker`  (opens telescope)
