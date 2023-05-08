@@ -203,6 +203,9 @@ local function close_workspace(timestamp)
   state.current_root_dirpath = nil
 end
 
+---@param rootdir string path to workspace root dir
+---@param user_data? table<number|string, any> initial user data
+---@param timestamp integer epoch ms to record as last access time
 function M.create(rootdir, user_data, timestamp)
   assert(type(rootdir) == 'string', 'type of workspace path must be string')
   assert(type(user_data) == 'table', 'type of user data must be table')
@@ -211,12 +214,15 @@ function M.create(rootdir, user_data, timestamp)
   create_workspace(p, user_data, timestamp)
 end
 
+---@param rootdir string path to workspace root dir
 function M.delete(rootdir)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = paths.canonical(rootdir)
   delete_workspace(p)
 end
 
+---@param src string path to old workspace root dir
+---@param target string path to new workspace root dir
 function M.move(src, target)
   assert(type(src) == 'string', 'source workspace path must be a string')
   assert(type(target) == 'string', 'target workspace path must be a string')
@@ -225,6 +231,8 @@ function M.move(src, target)
   move_workspace(p1, p2)
 end
 
+---@param rootdir string path to root of workspace
+---@param timestamp integer epoch ms to record as last access time
 function M.open(rootdir, timestamp)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
@@ -232,19 +240,23 @@ function M.open(rootdir, timestamp)
   open_workspace(p, timestamp)
 end
 
+---@param timestamp integer epoch ms to record as last access time
 function M.close(timestamp)
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
   close_workspace(timestamp)
 end
 
+---@return boolean is_open if a workspace is currently open or not
 function M.is_open()
   return state.current_root_dirpath ~= nil
 end
 
-function M.get_current_root_dirpath()
+---@return string? dir root dir of currently open workspace
+function M.get_current_root_dir()
   return state.current_root_dirpath
 end
 
+---@return string? dir data dir of currently open workspace
 function M.get_current_data_dir()
   if state.current_root_dirpath ~= nil then
     return state.current_root_dirpath .. paths.sep() .. state.data_dirname
