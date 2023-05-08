@@ -5,6 +5,7 @@ local history = require(modulename .. ".history")
 local state = require(modulename .. ".state")
 local paths = require(modulename .. ".path")
 local notify = require(modulename .. ".notify")
+local sorting = require(modulename .. ".sorting")
 local workspaces = require(modulename .. ".workspace")
 
 local M = {}
@@ -19,7 +20,7 @@ end
 --- Any currently open workspace will be closed.
 --- @param path string directory of the workspace to open
 function M.open(path)
-  if not path or not workspaces.contains_workspace(path) then
+  if not path or not workspaces.is_workspace(path) then
     notify.error('Cannot open non-existent workspace at "' .. path .. '".')
     return false
   end
@@ -68,15 +69,19 @@ function M.get_current_workspace()
 end
 
 --- Get history of recently-accessed workspaces
---- @return HookspaceWorkspace[] workspaces containing workspace information
-function M.get_history(sort_by)
-  return history.get_entries(sort_by)
-end
-
---- Get only still-valid history entries
---- @return HookspaceWorkspace[] workspaces containing workspace information
-function M.get_valid_history(sort_by)
-  return history.get_valid_entries(sort_by)
+--- @return HookspaceRecord[] records containing workspace information
+function M.read_history()
+  local results = history.read_records()
+  sorting.filter(results, function(r)
+    return workspaces.is_workspace(r.rootdir)
+  end)
+  sorting.transform(results, function(r)
+    local o = workspaces.read_metadata(r.rootdir)
+    o.datadir = workspaces.get_datadir(r.rootdir)
+    o = vim.tbl_deep_extend("force", r, o)
+    return o
+  end)
+  return results
 end
 
 --- Read metadata from a workspace
@@ -303,7 +308,7 @@ function M.setup(opts)
   })
   vim.api.nvim_create_user_command("HookspaceList", function(tbl)
     local simplified = {}
-    for _, v in pairs(history.get_entries()) do
+    for _, v in pairs(M.read_history()) do
       table.insert(simplified, v.rootdir)
     end
     print(vim.inspect(simplified))

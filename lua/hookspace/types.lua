@@ -15,5 +15,7 @@
 ---@field on_close nil|HookspaceHook|HookspaceHook[]
 
 ---@class HookspaceRecord
+---@field name string workspace display name
 ---@field last_accessed integer timestamp of last access
----@field rootdir string path to workspace root
+---@field rootdir string path to workspace root dir
+---@field datadir string path to workspace data dir

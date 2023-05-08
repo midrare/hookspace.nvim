@@ -276,6 +276,12 @@ function M.get_current_data_dir()
   return nil
 end
 
+---@param rootdir string workspace root dir
+---@return string datadir workspace data dir
+function M.get_datadir(rootdir)
+  return rootdir .. paths.sep() .. state.data_dirname
+end
+
 ---@param rootdir string path to root of workspace
 ---@return boolean is_workspace true if is root dir of a workspace
 function M.is_workspace(rootdir)

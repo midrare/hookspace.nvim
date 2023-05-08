@@ -45,32 +45,37 @@ local function cmp_last_accessed(r1, r2)
   return 0
 end
 
-local function read_records(cmp)
-  cmp = cmp or cmp_last_accessed
-  local entries = {}
-
-  if vim.fn.filereadable(records_path) == 1 then
-    entries = file.read_json(records_path) or {}
-    sorting.filter(entries, is_record_valid)
-    sorting.uniqify(entries, is_record_same)
-    sorting.sort(entries, cmp)
+local function read_records(cmp, reverse)
+  if cmp == nil then
+    cmp = cmp_last_accessed
+    reverse = true
   end
 
-  return entries
+  local records = {}
+
+  if vim.fn.filereadable(records_path) == 1 then
+    records = file.read_json(records_path) or {}
+    sorting.filter(records, is_record_valid)
+    sorting.uniqify(records, is_record_same)
+    sorting.sort(records, cmp, reverse)
+  end
+
+  return records
 end
 
 local function write_records(records)
   sorting.uniqify(records, is_record_same)
-  sorting.sort(records)
+  sorting.sort(records, cmp_last_accessed, true)
   file.write_json(records_path, records)
 end
 
-function module.get_records()
+---@return HookspaceRecord[] records workspace access records
+function module.read_records()
   return read_records()
 end
 
 ---@return string[] rootdirs workspace root dirs
-function module.get_paths()
+function module.read_rootdirs()
   local records = read_records()
   sorting.transform(records, function(r)
     return r.rootdir
@@ -104,30 +109,21 @@ function module.move(old_path, new_path)
 end
 
 ---@param path string workspace root dir
----@param name string new name for workspace
-function module.rename(path, name)
-  local records = read_records()
-  sorting.filter(records, function(r)
-    return is_record_has_path(r, path)
-  end)
-  sorting.apply(records, function(r)
-    r.name = name
-  end)
-
-  write_records(records)
-end
-
----@param path string workspace root dir
 ---@param timestamp integer last access timestamp
 function module.update(path, timestamp)
   local records = read_records()
-  sorting.filter(records, function(r)
+  local matches = sorting.filtered(records, function(r)
     return is_record_has_path(r, path)
+  end) or {}
+
+  sorting.filter(records, function(r)
+    return not is_record_has_path(r, path)
   end)
 
-  if records and #records >= 1 then
-    for _, record in ipairs(records) do
+  if matches and #matches >= 1 then
+    for _, record in ipairs(matches) do
       record.last_accessed = timestamp
+      table.insert(records, record)
     end
   else
     local canonical = paths.normpath(paths.normcase(path))
@@ -135,6 +131,7 @@ function module.update(path, timestamp)
     table.insert(records, record)
   end
 
+  sorting.uniqify(records, is_record_same)
   write_records(records)
 end
 
