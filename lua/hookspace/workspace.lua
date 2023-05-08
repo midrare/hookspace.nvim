@@ -287,7 +287,7 @@ function M.read_user_data(rootdir)
     .. state.data_dirname
     .. paths.sep()
     .. state.user_data_filename
-  return file.read_json(p)
+  return file.read_json(p) or {}
 end
 
 ---@param rootdir string workspace root dir path
