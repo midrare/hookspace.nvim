@@ -42,18 +42,12 @@ end
 --- If present, an already-extant workspace will be overwrittten.
 --- @param path string directory of workspace
 --- @param userdata? HookspaceUserData initial value of user data (optional)
-function M.create(path, userdata)
+function M.init(path, userdata)
   assert(type(path) == "string", "workspace path must be of type string")
   userdata = userdata or {}
   workspaces.create(path, userdata, os.time())
 end
 
---- Delete a workspace from the given directory
---- @param path string directory containing workspace
-function M.delete(path)
-  assert(type(path) == "string", "workspace path must be of type string")
-  workspaces.delete(path)
-end
 
 --- Move a workspace from one directory to another
 --- @param src string current workspace directory
@@ -211,10 +205,10 @@ function M.setup(opts)
   state.on_open = opts.on_open or state.on_open
   state.on_close = opts.on_close or state.on_close
 
-  vim.api.nvim_create_user_command("HookspaceCreate", function(tbl)
+  vim.api.nvim_create_user_command("HookspaceInit", function(tbl)
     if tbl and tbl.fargs then
       for _, rootdir in ipairs(tbl.fargs) do
-        M.create(rootdir)
+        M.init(rootdir)
       end
     end
   end, {
@@ -222,18 +216,6 @@ function M.setup(opts)
     force = true,
     nargs = 1,
     complete = "file",
-  })
-  vim.api.nvim_create_user_command("HookspaceDelete", function(tbl)
-    if tbl and tbl.fargs then
-      for _, rootdir in ipairs(tbl.fargs) do
-        M.delete(rootdir)
-      end
-    end
-  end, {
-    desc = "delete a workspace",
-    force = true,
-    nargs = 1,
-    complete = _history_complete,
   })
   vim.api.nvim_create_user_command("HookspaceList", function(tbl)
     local simplified = {}
