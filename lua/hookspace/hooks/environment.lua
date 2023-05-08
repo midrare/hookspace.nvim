@@ -35,6 +35,8 @@ function M.on_open(workspace, user_data)
         table.insert(old_env_names, name)
         old_env_values[name] = os.getenv(name)
 
+        -- TODO check env name for safety
+
         -- XXX Hacky, but safer than interpolating using the value directly
         vim.g.ULSSYOZRYK = value
         vim.cmd('let $' .. name .. ' = g:ULSSYOZRYK')
@@ -49,6 +51,7 @@ function M.on_close(workspace, user_data)
   if old_env_names then
     for _, name in ipairs(old_env_names) do
       local value = old_env_values[name]
+      -- TODO check env name for safety
       if value ~= nil then
         -- XXX Hacky, but safer than interpolating using the value directly
         vim.g.ULSSYOZRYK = value
