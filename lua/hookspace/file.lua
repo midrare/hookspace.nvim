@@ -1,6 +1,6 @@
--- 2022/10/30
+-- 2023/05/07
 
-local M = {}
+local module = {}
 
 local function dirname(filename)
   local d = filename:match('^(.*[\\/]).+$')
@@ -46,14 +46,6 @@ local function write_file(filepath, content)
   vim.loop.fs_close(fd)
 end
 
-function M.read_file(filepath)
-  return read_file(filepath)
-end
-
-function M.write_file(filepath, content)
-  write_file(filepath, content)
-end
-
 local function keys_from_str(o)
   local new_obj = {}
   for k, v in pairs(o) do
@@ -71,7 +63,21 @@ local function keys_from_str(o)
   return new_obj
 end
 
-function M.read_json(filepath)
+local function keys_to_str(o)
+  local new_obj = {}
+  for k, v in pairs(o) do
+    if type(v) == 'table' then
+      v = keys_to_str(v)
+    end
+    if type(k) ~= 'string' then
+      k = tostring(k)
+    end
+    new_obj[k] = v
+  end
+  return new_obj
+end
+
+local function read_json(filepath)
   local result = nil
 
   if vim.fn.filereadable(filepath) == 1 then
@@ -87,21 +93,7 @@ function M.read_json(filepath)
   return result
 end
 
-local function keys_to_str(o)
-  local new_obj = {}
-  for k, v in pairs(o) do
-    if type(v) == 'table' then
-      v = keys_to_str(v)
-    end
-    if type(k) ~= 'string' then
-      k = tostring(k)
-    end
-    new_obj[k] = v
-  end
-  return new_obj
-end
-
-function M.write_json(filepath, data)
+local function write_json(filepath, data)
   assert(type(filepath) == 'string', 'filepath must be of type string')
   local data_with_str_keys = keys_to_str(data)
   local plaintext = vim.fn.json_encode(data_with_str_keys or {}) or ''
@@ -109,4 +101,29 @@ function M.write_json(filepath, data)
   write_file(filepath, plaintext)
 end
 
-return M
+
+---@param filepath string path to file
+---@return nil|any data file contents
+function module.read_file(filepath)
+  return read_file(filepath)
+end
+
+---@param filepath string path to file
+---@param content nil|any data to write
+function module.write_file(filepath, content)
+  write_file(filepath, content)
+end
+
+---@param filepath string path to json file
+---@return nil|any data parsed file contents
+function module.read_json(filepath)
+  return read_json(filepath)
+end
+
+---@param filepath string path to json file
+---@param data nil|any data to encode as json and write
+function module.write_json(filepath, data)
+  write_json(filepath, data)
+end
+
+return module
