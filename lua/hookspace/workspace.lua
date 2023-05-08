@@ -79,7 +79,8 @@ local function create_workspace(rootdir, user_data, timestamp)
   file.write_file(datadir .. paths.sep() .. '.notags')
   file.write_file(datadir .. paths.sep() .. '.ignore', '*')
   file.write_file(datadir .. paths.sep() .. '.gitignore',
-    'Session.vim\n'
+    'session\n'
+    .. 'Session.vim\n'
     .. 'session.vim\n'
     .. 'PreSession.vim\n'
     .. 'presession.vim\n'
