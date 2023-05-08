@@ -84,9 +84,7 @@ local function create_workspace(rootdir, user_data, timestamp)
     .. 'PreSession.vim\n'
     .. 'presession.vim\n'
     .. 'userdata.json\n'
-    .. 'trailblazer\n'
-    .. 'TrailBlazer\n'
-    .. 'Trailblazer\n')
+    .. 'trailblazer\n')
 
   run_hooks(state.on_create, {
     rootdir = rootdir,
