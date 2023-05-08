@@ -278,6 +278,8 @@ function M.write_metadata(rootdir, metadata)
   file.write_json(p, metadata)
 end
 
+---@param rootdir string workspace root dir path
+---@return table<number|string, any> userdata user data
 function M.read_user_data(rootdir)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir
@@ -288,6 +290,8 @@ function M.read_user_data(rootdir)
   return file.read_json(p)
 end
 
+---@param rootdir string workspace root dir path
+---@param user_data table<number|string, any> user data
 function M.write_user_data(rootdir, user_data)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir
