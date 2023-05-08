@@ -4,8 +4,8 @@
 ---@field datadir string where workspace-specific files are stored
 ---@field rootdir string root dir of workspace
 
----@alias HookspaceUserData table<string|number, any>
 ---@alias HookspaceHook function(HookspaceWorkspace, HookspaceUserdata): nil|boolean
+---@alias HookspaceUserData table<string|number, any>
 
 ---@class HookspaceOptions
 ---@field verbose integer from 0..

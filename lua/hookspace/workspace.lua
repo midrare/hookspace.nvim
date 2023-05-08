@@ -9,7 +9,10 @@ local state = require(moduleroot .. '.state')
 
 local M = {}
 
-local function run_hooks(hooks, ws_meta, user_data)
+---@param hooks string|HookspaceHook|HookspaceHook[]
+---@param workspace HookspaceWorkspace
+---@param userdata HookspaceUserData
+local function run_hooks(hooks, workspace, userdata)
   assert(
     hooks == nil
       or type(hooks) == 'table'
@@ -17,15 +20,15 @@ local function run_hooks(hooks, ws_meta, user_data)
       or type(hooks) == 'string',
     'hooks must be of type nil, table, function, or string'
   )
-  assert(type(ws_meta) == 'table', 'workspace metadata must be of type table')
-  assert(type(user_data) == 'table', 'user data must be of type table')
+  assert(type(workspace) == 'table', 'workspace metadata must be of type table')
+  assert(type(userdata) == 'table', 'user data must be of type table')
 
   if type(hooks) == 'table' then
     for _, hook in ipairs(hooks) do
-      run_hooks(hook, ws_meta, user_data)
+      run_hooks(hook, workspace, userdata)
     end
   elseif type(hooks) == 'function' then
-    local status_ok, error_msg = pcall(hooks, ws_meta, user_data)
+    local status_ok, error_msg = pcall(hooks, workspace, userdata)
     if not status_ok then
       notify.error('Failed to run hook "' .. vim.inspect(hooks) .. '"')
       if error_msg then
@@ -46,9 +49,12 @@ local function run_hooks(hooks, ws_meta, user_data)
   end
 end
 
-local function create_workspace(rootdir, user_data, timestamp)
+---@param rootdir string
+---@param userdata HookspaceUserData
+---@param timestamp integer
+local function create_workspace(rootdir, userdata, timestamp)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
-  assert(type(user_data) == 'table', 'user data must be of type table')
+  assert(type(userdata) == 'table', 'user data must be of type table')
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
 
   local datadir = rootdir .. paths.sep() .. state.data_dirname
@@ -70,7 +76,7 @@ local function create_workspace(rootdir, user_data, timestamp)
     return
   end
 
-  file.write_json(userdatafile, user_data)
+  file.write_json(userdatafile, userdata)
   if vim.fn.filereadable(userdatafile) == 0 then
     error('failed to write workspace user data file "' .. userdatafile .. '"')
     return
@@ -88,11 +94,12 @@ local function create_workspace(rootdir, user_data, timestamp)
   run_hooks(state.on_create, {
     rootdir = rootdir,
     datadir = datadir,
-  }, user_data)
-  file.write_json(userdatafile, user_data)
+  }, userdata)
+  file.write_json(userdatafile, userdata)
   history.update(rootdir, timestamp)
 end
 
+---@param rootdir string
 local function delete_workspace(rootdir)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
 
@@ -120,6 +127,8 @@ local function delete_workspace(rootdir)
   end
 end
 
+---@param src_rootdir string
+---@param target_rootdir string
 local function move_workspace(src_rootdir, target_rootdir)
   assert(type(src_rootdir) == 'string', 'source path must be of type string')
   assert(type(target_rootdir) == 'string', 'target path must be of type string')
@@ -153,6 +162,8 @@ local function move_workspace(src_rootdir, target_rootdir)
   history.rename(src_rootdir, target_rootdir)
 end
 
+---@param rootdir string
+---@param timestamp integer
 local function open_workspace(rootdir, timestamp)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
@@ -180,6 +191,7 @@ local function open_workspace(rootdir, timestamp)
   history.update(rootdir, timestamp)
 end
 
+---@param timestamp integer
 local function close_workspace(timestamp)
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
   assert(
@@ -204,7 +216,7 @@ local function close_workspace(timestamp)
 end
 
 ---@param rootdir string path to workspace root dir
----@param user_data? table<number|string, any> initial user data
+---@param user_data? HookspaceUserData initial user data
 ---@param timestamp integer epoch ms to record as last access time
 function M.create(rootdir, user_data, timestamp)
   assert(type(rootdir) == 'string', 'type of workspace path must be string')
@@ -297,7 +309,7 @@ function M.write_metadata(rootdir, metadata)
 end
 
 ---@param rootdir string workspace root dir path
----@return table<number|string, any> userdata user data
+---@return HookspaceUserData userdata user data
 function M.read_user_data(rootdir)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir
@@ -309,7 +321,7 @@ function M.read_user_data(rootdir)
 end
 
 ---@param rootdir string workspace root dir path
----@param user_data table<number|string, any> user data
+---@param user_data HookspaceUserData user data
 function M.write_user_data(rootdir, user_data)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir
