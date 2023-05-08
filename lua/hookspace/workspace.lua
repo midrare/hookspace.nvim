@@ -91,10 +91,8 @@ local function init_workspace(rootdir, userdata, timestamp)
     .. 'userdata.json\n'
     .. 'trailblazer\n')
 
-  run_hooks(state.on_init, {
-    rootdir = rootdir,
-    datadir = datadir,
-  }, userdata)
+  run_hooks(state.on_init, { rootdir = rootdir, datadir = datadir }, userdata)
+
   file.write_json(userdatafile, userdata)
   history.update(rootdir, timestamp)
 end

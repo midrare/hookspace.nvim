@@ -45,7 +45,7 @@ end
 function M.init(path, userdata)
   assert(type(path) == "string", "workspace path must be of type string")
   userdata = userdata or {}
-  workspaces.initt(path, userdata, os.time())
+  workspaces.init(path, userdata, os.time())
 end
 
 
