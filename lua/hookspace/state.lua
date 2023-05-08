@@ -1,23 +1,23 @@
 local modulename, _ = ...
-local moduleroot = modulename:gsub('(.+)%..+', '%1')
+local moduleroot = modulename:gsub("(.+)%..+", "%1")
 
-local paths = require(moduleroot .. '.path')
+local paths = require(moduleroot .. ".path")
 
-local M = {}
+local module = {}
 
-M.plugin_name = 'hookspace'
-M.plugin_datadir = vim.fn.stdpath('data') .. paths.sep() .. 'hookspace'
-M.data_dirname = '.hookspace'
-M.metadata_filename = 'workspace.json'
-M.user_data_filename = 'userdata.json'
+module.plugin_name = "hookspace"
+module.plugin_datadir = vim.fn.stdpath("data") .. paths.sep() .. "hookspace"
+module.data_dirname = ".hookspace"
+module.metadata_filename = "workspace.json"
+module.user_data_filename = "userdata.json"
 
-M.verbose = 1
+module.verbose = 1
 
-M.on_create = {}
-M.on_delete = {}
-M.on_open = {}
-M.on_close = {}
+module.on_create = {}
+module.on_delete = {}
+module.on_open = {}
+module.on_close = {}
 
-M.current_root_dirpath = nil
+module.current_root_dirpath = nil
 
-return M
+return module
