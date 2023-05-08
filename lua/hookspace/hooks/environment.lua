@@ -30,6 +30,7 @@ function M.on_open(workspace, user_data)
       tbl_sub_all(localenv, '{rootdir}', workspace.rootdir)
       tbl_sub_all(localenv, '{datadir}', workspace.datadir)
 
+      ---@diagnostic disable-next-line: param-type-mismatch
       for name, value in pairs(localenv) do
         table.insert(old_env_names, name)
         old_env_values[name] = os.getenv(name)
