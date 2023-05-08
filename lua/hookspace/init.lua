@@ -5,6 +5,7 @@ local history = require(modulename .. ".history")
 local state = require(modulename .. ".state")
 local paths = require(modulename .. ".path")
 local notify = require(modulename .. ".notify")
+local sorting = require(modulename .. ".sorting")
 local workspaces = require(modulename .. ".workspace")
 
 local M = {}
@@ -19,7 +20,7 @@ end
 --- Any currently open workspace will be closed.
 --- @param path string directory of the workspace to open
 function M.open(path)
-  if not path or not workspaces.contains_workspace(path) then
+  if not path or not workspaces.is_workspace(path) then
     notify.error('Cannot open non-existent workspace at "' .. path .. '".')
     return false
   end
@@ -40,19 +41,13 @@ end
 --- Create a new workspace at the given path
 --- If present, an already-extant workspace will be overwrittten.
 --- @param path string directory of workspace
---- @param user_data? HookspaceUserData initial value of user data (optional)
-function M.create(path, user_data)
+--- @param userdata? HookspaceUserData initial value of user data (optional)
+function M.init(path, userdata)
   assert(type(path) == "string", "workspace path must be of type string")
-  user_data = user_data or {}
-  workspaces.create(path, user_data, os.time())
+  userdata = userdata or {}
+  workspaces.create(path, userdata, os.time())
 end
 
---- Delete a workspace from the given directory
---- @param path string directory containing workspace
-function M.delete(path)
-  assert(type(path) == "string", "workspace path must be of type string")
-  workspaces.delete(path)
-end
 
 --- Move a workspace from one directory to another
 --- @param src string current workspace directory
@@ -68,15 +63,19 @@ function M.get_current_workspace()
 end
 
 --- Get history of recently-accessed workspaces
---- @return table workspaces containing workspace information
-function M.get_history(sort_by)
-  return history.get_entries(sort_by)
-end
-
---- Get only still-valid history entries
---- @return table workspaces containing workspace information
-function M.get_valid_history(sort_by)
-  return history.get_valid_entries(sort_by)
+--- @return HookspaceRecord[] records containing workspace information
+function M.read_history()
+  local results = history.read_records()
+  sorting.filter(results, function(r)
+    return workspaces.is_workspace(r.rootdir)
+  end)
+  sorting.transform(results, function(r)
+    local o = workspaces.read_metadata(r.rootdir)
+    o.datadir = workspaces.get_datadir(r.rootdir)
+    o = vim.tbl_deep_extend("force", r, o)
+    return o
+  end)
+  return results
 end
 
 --- Read metadata from a workspace
@@ -144,8 +143,8 @@ end
 
 --- Write user data for a workspace
 --- @param workspace? HookspaceWorkspace path to workspace directory or `nil` for current workspace
---- @param user_data HookspaceUserData the user data to write
-function M.write_user_data(workspace, user_data)
+--- @param userdata HookspaceUserData the user data to write
+function M.write_user_data(workspace, userdata)
   if not workspace and not state.current_root_dirpath then
     notify.error(
       "Cannot write user data; no workspace specified "
@@ -160,7 +159,7 @@ function M.write_user_data(workspace, user_data)
     root = paths.canonical(workspace)
   end
 
-  workspaces.write_user_data(root, user_data)
+  workspaces.write_user_data(root, userdata)
 end
 
 --- Check if the directory contains a workspace
@@ -194,78 +193,8 @@ local function _history_complete(arg_lead, cmd_line, cursor_pos)
   return filepaths
 end
 
---- Show telescope picker for history items
---- @param options for telescope
-function M.picker(opts)
-  local actions = require("telescope.actions")
-  local actions_state = require("telescope.actions.state")
-  local pickers = require("telescope.pickers")
-  local finders = require("telescope.finders")
-  local conf = require("telescope.config")
-
-  opts = opts or {}
-
-  local function to_display(entry)
-    local hls = {}
-    local display = entry.metadata.name
-    if not display and entry.rootdir then
-      display = paths.basename(entry.rootdir)
-    end
-
-    if entry.rootdir then
-      local hl_start = #display + 1
-      table.insert(hls, { { hl_start, hl_start + #entry.rootdir }, "Comment" })
-      display = display .. " " .. entry.rootdir
-    end
-
-    return display, hls
-  end
-
-  pickers
-    .new(opts, {
-      prompt_title = opts.title or state.plugin_name,
-      finder = finders.new_table({
-        results = history.get_valid_entries(),
-        entry_maker = function(entry)
-          if
-            not entry
-            or not entry.rootdir
-            or vim.fn.isdirectory(entry.rootdir) < 1
-          then
-            return nil
-          end
-          local metadata = workspaces.read_metadata(entry.rootdir) or {}
-          return {
-            value = entry.rootdir,
-            metadata = metadata,
-            display = to_display,
-            ordinal = metadata.name
-              or paths.basename(entry.rootdir)
-              or tostring(entry.last_accessed or 0),
-            rootdir = entry.rootdir,
-          }
-        end,
-      }),
-      sorter = conf.values.generic_sorter(opts),
-      attach_mappings = function(prompt_bufnr, map)
-        map("i", "<c-space>", actions.to_fuzzy_refine)
-        actions.select_default:replace(function()
-          actions.close(prompt_bufnr)
-          local selection = actions_state.get_selected_entry()
-          if selection and selection.rootdir then
-            if workspaces.is_open() then
-              workspaces.close(os.time())
-            end
-            workspaces.open(selection.rootdir, os.time())
-          end
-        end)
-        return true
-      end,
-    })
-    :find()
-end
-
----@param opts HookspaceOptions setup options
+--- Prepare hookspace for use
+---@param opts HookspaceOptions options
 function M.setup(opts)
   if opts.verbose ~= nil and type(opts.verbose) == "number" then
     state.verbose = opts.verbose
@@ -276,10 +205,10 @@ function M.setup(opts)
   state.on_open = opts.on_open or state.on_open
   state.on_close = opts.on_close or state.on_close
 
-  vim.api.nvim_create_user_command("HookspaceCreate", function(tbl)
+  vim.api.nvim_create_user_command("HookspaceInit", function(tbl)
     if tbl and tbl.fargs then
       for _, rootdir in ipairs(tbl.fargs) do
-        M.create(rootdir)
+        M.init(rootdir)
       end
     end
   end, {
@@ -288,21 +217,9 @@ function M.setup(opts)
     nargs = 1,
     complete = "file",
   })
-  vim.api.nvim_create_user_command("HookspaceDelete", function(tbl)
-    if tbl and tbl.fargs then
-      for _, rootdir in ipairs(tbl.fargs) do
-        M.delete(rootdir)
-      end
-    end
-  end, {
-    desc = "delete a workspace",
-    force = true,
-    nargs = 1,
-    complete = _history_complete,
-  })
   vim.api.nvim_create_user_command("HookspaceList", function(tbl)
     local simplified = {}
-    for _, v in pairs(history.get_entries()) do
+    for _, v in pairs(M.read_history()) do
       table.insert(simplified, v.rootdir)
     end
     print(vim.inspect(simplified))
@@ -364,13 +281,6 @@ function M.setup(opts)
     force = true,
     nargs = 1,
   })
-  vim.api.nvim_create_user_command("HookspacePicker", function(tbl)
-    M.picker()
-  end, {
-    desc = "show workspace picker",
-    force = true,
-  })
-
   vim.api.nvim_create_augroup("hookspace", { clear = true })
   vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
     group = "hookspace",

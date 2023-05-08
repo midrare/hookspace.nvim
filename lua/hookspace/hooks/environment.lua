@@ -18,6 +18,10 @@ local function tbl_sub_all(tbl, pat, repl)
   end
 end
 
+local function is_var_name_sane(varname)
+  return string.match(varname, "^[a-zA-Z0-9_\\-]*$")
+end
+
 function M.on_open(workspace, user_data)
   old_env_names = {}
   old_env_values = {}
@@ -32,15 +36,17 @@ function M.on_open(workspace, user_data)
 
       ---@diagnostic disable-next-line: param-type-mismatch
       for name, value in pairs(localenv) do
-        table.insert(old_env_names, name)
-        old_env_values[name] = os.getenv(name)
+        if is_var_name_sane(name) then
+          table.insert(old_env_names, name)
+          old_env_values[name] = os.getenv(name)
 
-        -- TODO check env name for safety
-
-        -- XXX Hacky, but safer than interpolating using the value directly
-        vim.g.ULSSYOZRYK = value
-        vim.cmd('let $' .. name .. ' = g:ULSSYOZRYK')
-        vim.g.ULSSYOZRYK = nil
+          -- safer than interpolating the value directly
+          vim.g.ORVQUZFPUA = name
+          vim.g.ULSSYOZRYK = value
+          vim.cmd('call setenv(g:ORVQUZFPUA, g:ULSSYOZRYK)')
+          vim.g.ORVQUZFPUA = nil
+          vim.g.ULSSYOZRYK = nil
+        end
       end
     end
   end
@@ -50,15 +56,18 @@ end
 function M.on_close(workspace, user_data)
   if old_env_names then
     for _, name in ipairs(old_env_names) do
-      local value = old_env_values[name]
-      -- TODO check env name for safety
-      if value ~= nil then
-        -- XXX Hacky, but safer than interpolating using the value directly
+      if is_var_name_sane(name) then
+        local value = old_env_values[name]
+        -- safer than interpolating the value directly
+        vim.g.ORVQUZFPUA = name
         vim.g.ULSSYOZRYK = value
-        vim.cmd('let $' .. name .. ' = g:ULSSYOZRYK')
+        if value ~= nil then
+          vim.cmd('call setenv(g:ORVQUZFPUA, g:ULSSYOZRYK)')
+        else
+          vim.cmd('call setenv(g:ORVQUZFPUA, v:null)')
+        end
+        vim.g.ORVQUZFPUA = nil
         vim.g.ULSSYOZRYK = nil
-      else
-        vim.cmd('unlet $' .. name)
       end
     end
 
