@@ -281,13 +281,6 @@ function M.setup(opts)
     force = true,
     nargs = 1,
   })
-  vim.api.nvim_create_user_command("HookspacePicker", function(tbl)
-    M.picker()
-  end, {
-    desc = "show workspace picker",
-    force = true,
-  })
-
   vim.api.nvim_create_augroup("hookspace", { clear = true })
   vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
     group = "hookspace",
