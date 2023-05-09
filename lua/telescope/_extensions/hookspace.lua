@@ -1,8 +1,8 @@
 local modulename, _ = ...
 local moduleroot = modulename:gsub("(.+)%..+", "%1")
 
-local paths = require(moduleroot .. ".paths")
 local hookspace = require("hookspace")
+local paths = require("hookspace.paths")
 local state = require("hookspace.state")
 local workspaces = require("hookspace.workspaces")
 
