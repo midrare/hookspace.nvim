@@ -58,8 +58,8 @@ local function close_buffer(bufnr)
   end
 end
 
-function module.on_open(metadata, user_data)
-  local session = metadata.datadir .. path_sep .. 'Session.vim'
+function module.on_open(workspace, user_data)
+  local session = workspace.datadir .. path_sep .. 'Session.vim'
   local original = vim.fn.stdpath('data') .. path_sep .. 'PreSession.vim'
 
   vim.fn.delete(original)
@@ -87,8 +87,8 @@ function module.on_open(metadata, user_data)
   end
 end
 
-function module.on_close(metadata, user_data)
-  local session = metadata.datadir .. path_sep .. 'Session.vim'
+function module.on_close(workspace, user_data)
+  local session = workspace.datadir .. path_sep .. 'Session.vim'
   local original = vim.fn.stdpath('data') .. path_sep .. 'PreSession.vim'
 
   write_session(session)

@@ -41,11 +41,11 @@ end
 --- Create a new workspace at the given path
 --- If present, an already-extant workspace will be overwrittten.
 --- @param path string directory of workspace
---- @param userdata? HookspaceUserData initial value of user data (optional)
-function module.init(path, userdata)
+--- @param user_data? HookspaceUserData initial value of user data (optional)
+function module.init(path, user_data)
   assert(type(path) == "string", "workspace path must be of type string")
-  userdata = userdata or {}
-  workspaces.init(path, userdata, os.time())
+  user_data = user_data or {}
+  workspaces.init(path, user_data, os.time())
 end
 
 
@@ -79,10 +79,10 @@ function module.read_history()
 end
 
 --- Read metadata from a workspace
---- @param workspace string path to workspace directory or `nil` for current workspace
+--- @param rootdir string path to workspace directory or `nil` for current workspace
 --- @return HookspaceWorkspace metadata workspace info
-function module.read_metadata(workspace)
-  if not workspace and not state.current_root_dirpath then
+function module.read_metadata(rootdir)
+  if not rootdir and not state.current_rootdir then
     notify.error(
       "Cannot read metadata; no workspace specified "
         .. "and no workspace is currently open.",
@@ -91,19 +91,19 @@ function module.read_metadata(workspace)
     return {}
   end
 
-  local root = state.current_root_dirpath
-  if workspace then
-    root = paths.canonical(workspace)
+  local root = state.current_rootdir
+  if rootdir then
+    root = paths.canonical(rootdir)
   end
 
   return workspaces.read_metadata(root)
 end
 
 --- Write metadata for a workspace
---- @param workspace string path to workspace directory or `nil` for current workspace
---- @param metadata HookspaceWorkspace the metadata to write
-function module.write_metadata(workspace, metadata)
-  if not workspace and not state.current_root_dirpath then
+--- @param rootdir string path to workspace directory or `nil` for current workspace
+--- @param workspace HookspaceWorkspace the metadata to write
+function module.write_metadata(rootdir, workspace)
+  if not rootdir and not state.current_rootdir then
     notify.error(
       "Cannot read metadata; no workspace specified "
         .. "and no workspace is currently open.",
@@ -112,19 +112,19 @@ function module.write_metadata(workspace, metadata)
     return {}
   end
 
-  local root = state.current_root_dirpath
-  if workspace then
-    root = paths.canonical(workspace)
+  local root = state.current_rootdir
+  if rootdir then
+    root = paths.canonical(rootdir)
   end
 
-  workspaces.write_metadata(root, metadata)
+  workspaces.write_metadata(root, workspace)
 end
 
 --- Read user data a workspace
---- @param workspace? string path to workspace directory or `nil` for current workspace
+--- @param rootdir? string path to workspace directory or `nil` for current workspace
 --- @return HookspaceUserData userdata user data of the workspace
-function module.read_user_data(workspace)
-  if not workspace and not state.current_root_dirpath then
+function module.read_user_data(rootdir)
+  if not rootdir and not state.current_rootdir then
     notify.error(
       "Cannot read user data; no workspace specified "
         .. "and no workspace is currently open.",
@@ -133,19 +133,19 @@ function module.read_user_data(workspace)
     return {}
   end
 
-  local root = state.current_root_dirpath
-  if workspace then
-    root = paths.canonical(workspace)
+  local root = state.current_rootdir
+  if rootdir then
+    root = paths.canonical(rootdir)
   end
 
   return workspaces.read_user_data(root)
 end
 
 --- Write user data for a workspace
---- @param workspace? HookspaceWorkspace path to workspace directory or `nil` for current workspace
+--- @param rootdir? string path to workspace directory or `nil` for current workspace
 --- @param userdata HookspaceUserData the user data to write
-function module.write_user_data(workspace, userdata)
-  if not workspace and not state.current_root_dirpath then
+function module.write_user_data(rootdir, userdata)
+  if not rootdir and not state.current_rootdir then
     notify.error(
       "Cannot write user data; no workspace specified "
         .. "and no workspace is currently open.",
@@ -154,9 +154,9 @@ function module.write_user_data(workspace, userdata)
     return {}
   end
 
-  local root = state.current_root_dirpath
-  if workspace then
-    root = paths.canonical(workspace)
+  local root = state.current_rootdir
+  if rootdir then
+    root = paths.canonical(rootdir)
   end
 
   workspaces.write_user_data(root, userdata)
@@ -165,8 +165,8 @@ end
 --- Check if the directory contains a workspace
 --- @param path string directory to check
 --- @return boolean is_found if a workspace is found
-function module.contains_workspace(path)
-  return type(path) == "string" and workspaces.contains_workspace(path)
+function module.is_workspace(path)
+  return type(path) == "string" and workspaces.is_workspace(path)
 end
 
 local function _history_complete(arg_lead, cmd_line, cursor_pos)

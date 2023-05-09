@@ -138,7 +138,7 @@ local function open_workspace(rootdir, timestamp)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
   assert(
-    not state.current_root_dirpath,
+    not state.current_rootdir,
     'cannot open workspace when one is already open'
   )
 
@@ -157,7 +157,7 @@ local function open_workspace(rootdir, timestamp)
     datadir = datadir,
   }, user_data)
   file.write_json(userdatafile, user_data)
-  state.current_root_dirpath = rootdir
+  state.current_rootdir = rootdir
   history.update(rootdir, timestamp)
 end
 
@@ -165,11 +165,11 @@ end
 local function close_workspace(timestamp)
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
   assert(
-    state.current_root_dirpath,
+    state.current_rootdir,
     'cannot close workspace when one is not already open'
   )
 
-  local datadir = state.current_root_dirpath
+  local datadir = state.current_rootdir
     .. paths.sep()
     .. state.data_dirname
   local metafile = datadir .. paths.sep() .. state.metadata_filename
@@ -177,12 +177,12 @@ local function close_workspace(timestamp)
 
   local user_data = file.read_json(userdatafile) or {}
   run_hooks(state.on_close, {
-    rootdir = state.current_root_dirpath,
+    rootdir = state.current_rootdir,
     datadir = datadir,
   }, user_data)
   file.write_json(userdatafile, user_data)
-  history.update(state.current_root_dirpath, timestamp)
-  state.current_root_dirpath = nil
+  history.update(state.current_rootdir, timestamp)
+  state.current_rootdir = nil
 end
 
 ---@param rootdir string path to workspace root dir
@@ -223,18 +223,18 @@ end
 
 ---@return boolean is_open if a workspace is currently open or not
 function module.is_open()
-  return state.current_root_dirpath ~= nil
+  return state.current_rootdir ~= nil
 end
 
 ---@return string? dir root dir of currently open workspace
 function module.get_current_root_dir()
-  return state.current_root_dirpath
+  return state.current_rootdir
 end
 
 ---@return string? dir data dir of currently open workspace
 function module.get_current_data_dir()
-  if state.current_root_dirpath ~= nil then
-    return state.current_root_dirpath .. paths.sep() .. state.data_dirname
+  if state.current_rootdir ~= nil then
+    return state.current_rootdir .. paths.sep() .. state.data_dirname
   end
   return nil
 end

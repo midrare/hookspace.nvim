@@ -17,6 +17,6 @@ module.on_init = {}
 module.on_open = {}
 module.on_close = {}
 
-module.current_root_dirpath = nil
+module.current_rootdir = nil
 
 return module
