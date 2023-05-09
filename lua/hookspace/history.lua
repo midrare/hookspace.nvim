@@ -55,9 +55,9 @@ local function read_records(cmp, reverse)
 
   if vim.fn.filereadable(records_path) == 1 then
     records = file.read_json(records_path) or {}
+    sorting.sort(records, cmp, reverse)
     sorting.filter(records, is_record_valid)
     sorting.uniqify(records, is_record_same)
-    sorting.sort(records, cmp, reverse)
   end
 
   return records
