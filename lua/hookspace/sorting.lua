@@ -20,7 +20,7 @@ local function cloned(o)
   return o2
 end
 
-local function default_cmp(a, b)
+local function cmp_default(a, b)
   if a == b then
     return 0
   elseif a < b then
@@ -31,11 +31,18 @@ local function default_cmp(a, b)
   return 0
 end
 
+local function pred_default(a)
+  if a then
+    return true
+  end
+  return false
+end
+
 ---@param items any[] objects to compare
 ---@param cmp? Comparator how to compare items
 ---@param reverse? boolean order results greatest to smallest
 module.sort = function(items, cmp, reverse)
-  cmp = cmp or default_cmp
+  cmp = cmp or cmp_default
   for i = 1, #items - 1 do
     local a = items[i]
     local b = items[i + 1]
@@ -48,6 +55,7 @@ module.sort = function(items, cmp, reverse)
   end
 end
 
+
 ---@param items any[] objects to compare
 ---@param cmp? Comparator how to compare items
 ---@param reverse? boolean order results greatest to smallest
@@ -58,29 +66,48 @@ module.sorted = function(items, cmp, reverse)
   return results
 end
 
----@param items any[] items to filter
----@param pred function(any): boolean true if should include
----@param invert? boolean switch include and exclude
-module.filter = function(items, pred, invert)
+
+---@param items any[] items to extract from
+---@param pred? function(any): boolean true if should extract
+---@param invert? boolean switch behavior of predicate
+---@return any[] items all items satisfying the predicate
+module.extract = function(items, pred, invert)
+  pred = pred or pred_default
+  invert = invert or false
+  local results = {}
   local base = 1
   for i, item in ipairs(items) do
     items[i] = nil
     local is_match = pred(item)
     if (not invert and is_match) or (invert and not is_match) then
+      table.insert(results, item)
+    else
       items[base] = item
       base = base + 1
     end
   end
+  return results
 end
 
+
 ---@param items any[] items to filter
----@param pred function(o: any): boolean true if should include
----@param invert? boolean switch include and exclude
+---@param pred? function(any): boolean true if should keep
+---@param invert? boolean switch behavior of predicate
+module.filter = function(items, pred, invert)
+  invert = invert or false
+  module.extract(items, pred, not invert)
+end
+
+
+---@param items any[] items to filter
+---@param pred? function(o: any): boolean true if should keep
+---@param invert? boolean switch behavior of predicate
 module.filtered = function(items, pred, invert)
   local results = cloned(items)
   module.filter(results, pred, invert)
   return results
 end
+
 
 ---@param items any[] items to uniqify
 ---@param cmp? function(a: any, b: any): boolean|integer true or 0 if same
