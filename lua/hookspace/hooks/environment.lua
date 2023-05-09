@@ -1,4 +1,4 @@
-local M = {}
+local module = {}
 
 local old_env_names = nil
 local old_env_values = nil
@@ -22,7 +22,7 @@ local function is_var_name_sane(varname)
   return string.match(varname, "^[a-zA-Z0-9_\\-]*$")
 end
 
-function M.on_open(workspace, user_data)
+function module.on_open(workspace, user_data)
   old_env_names = {}
   old_env_values = {}
 
@@ -53,7 +53,7 @@ function M.on_open(workspace, user_data)
   vim.api.nvim_set_current_dir(workspace.rootdir)
 end
 
-function M.on_close(workspace, user_data)
+function module.on_close(workspace, user_data)
   if old_env_names then
     for _, name in ipairs(old_env_names) do
       if is_var_name_sane(name) then
@@ -76,4 +76,4 @@ function M.on_close(workspace, user_data)
   end
 end
 
-return M
+return module

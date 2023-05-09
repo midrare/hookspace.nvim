@@ -1,6 +1,6 @@
 -- 2023/05/07
 
-local M = {}
+local module = {}
 
 local is_windows = vim.fn.has('win32') > 0
 local path_sep = '/'
@@ -12,20 +12,20 @@ local np_pat1 = ('[^SEP]+SEP%.%.SEP?'):gsub('SEP', path_sep)
 local np_pat2 = ('SEP+%.?SEP'):gsub('SEP', path_sep)
 
 ---@return string sep os-specific path separator
-function M.sep()
+function module.sep()
   return path_sep
 end
 
 ---@param filename string file path
 ---@return string basename file name segment of path
-function M.basename(filename)
+function module.basename(filename)
   local a, _ = filename:gsub('^.*[\\/](.+)[\\/]*', '%1')
   return a
 end
 
 ---@param filename string file path
 ---@return string dirname parent directory of path
-function M.dirname(filename)
+function module.dirname(filename)
   local d = filename:match('^(.*[\\/]).+$')
   if d ~= nil then
     d = d:match('^(.+)[\\/]+$') or d
@@ -35,21 +35,21 @@ end
 
 ---@param filename string file path
 ---@return string filestem base name without file extension
-function M.filestem(filename)
+function module.filestem(filename)
   local basename = filename:match('^.+[\\/](.+)$') or filename
   return basename:gsub('^(.+)%.[^%s]+$', '%1')
 end
 
 ---@param filename string file path
 ---@return string? file extension if any
-function M.fileext(filename)
+function module.fileext(filename)
   local basename = filename:match('^.+[\\/](.+)$') or filename
   return basename:match('^.+(%.[^%s]+)$') or nil
 end
 
 ---@param filepath string file path
 ---@return string filepath file path with path separators for current os
-function M.normcase(filepath)
+function module.normcase(filepath)
   local p, _ = nil, nil
   if is_windows then
     p, _ = filepath:lower():gsub('/', '\\')
@@ -61,10 +61,10 @@ end
 
 ---@param filepath string file path
 ---@return string filepath file path with ".." collapsed
-function M.normpath(filepath)
+function module.normpath(filepath)
   if is_windows then
     if filepath:match('^\\\\') then -- UNC
-      return '\\\\' .. M.normpath(filepath:sub(3))
+      return '\\\\' .. module.normpath(filepath:sub(3))
     end
     filepath = filepath:gsub('/', '\\')
   end
@@ -101,31 +101,31 @@ end
 
 ---@param filepath string file path
 ---@return boolean is_abs if file path is an absolute path
-function M.isabs(filepath)
+function module.isabs(filepath)
   return filepath:match('^[\\/]') or filepath:match('^[a-zA-Z]:[\\/]')
 end
 
 ---@param filepath string file path
 ---@param pwd string current directory
 ---@return string filepath absolute file path
-function M.abspath(filepath, pwd)
+function module.abspath(filepath, pwd)
   filepath = filepath:gsub('[\\/]+$', '')
-  if not M.isabs(filepath) then
+  if not module.isabs(filepath) then
     filepath = pwd:gsub('[\\/]+$', '')
-      .. M.sep()
+      .. module.sep()
       .. filepath:gsub('^[\\/]+', '')
   end
-  return M.normpath(filepath)
+  return module.normpath(filepath)
 end
 
 ---@param filepath string file path
 ---@param cwd string current directory
 ---@return string filepath canonical file path
-function M.canonical(filepath, cwd)
-  local normcased = M.normcase(filepath)
+function module.canonical(filepath, cwd)
+  local normcased = module.normcase(filepath)
 
-  if not M.isabs(normcased) then
-    return M.abspath(normcased, cwd)
+  if not module.isabs(normcased) then
+    return module.abspath(normcased, cwd)
   end
 
   return normcased
@@ -133,8 +133,8 @@ end
 
 ---@vararg string file path segments
 ---@return string filepath file path joined using os-specific path separator
-function M.join(...)
-  local sep = M.sep()
+function module.join(...)
+  local sep = module.sep()
   local joined = ''
 
   for i = 1, select('#', ...) do
@@ -150,4 +150,4 @@ function M.join(...)
   return joined
 end
 
-return M
+return module

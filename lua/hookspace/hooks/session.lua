@@ -1,5 +1,5 @@
 local modulename, _ = ...
-local M = {}
+local module = {}
 
 local bufdel = {}
 _, bufdel.closebuffers = pcall(require, 'close_buffers')
@@ -58,7 +58,7 @@ local function close_buffer(bufnr)
   end
 end
 
-function M.on_open(metadata, user_data)
+function module.on_open(metadata, user_data)
   local session = metadata.datadir .. path_sep .. 'Session.vim'
   local original = vim.fn.stdpath('data') .. path_sep .. 'PreSession.vim'
 
@@ -87,7 +87,7 @@ function M.on_open(metadata, user_data)
   end
 end
 
-function M.on_close(metadata, user_data)
+function module.on_close(metadata, user_data)
   local session = metadata.datadir .. path_sep .. 'Session.vim'
   local original = vim.fn.stdpath('data') .. path_sep .. 'PreSession.vim'
 
@@ -115,4 +115,4 @@ function M.on_close(metadata, user_data)
   end
 end
 
-return M
+return module

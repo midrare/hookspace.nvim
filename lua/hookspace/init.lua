@@ -8,18 +8,18 @@ local notify = require(modulename .. ".notify")
 local sorting = require(modulename .. ".sorting")
 local workspaces = require(modulename .. ".workspace")
 
-local M = {}
+local module = {}
 
 --- Check if a workspace is currently open
 --- @return boolean is_open if a workspace is open
-function M.is_open()
+function module.is_open()
   return workspaces.is_open()
 end
 
 --- Open a workspace
 --- Any currently open workspace will be closed.
 --- @param path string directory of the workspace to open
-function M.open(path)
+function module.open(path)
   if not path or not workspaces.is_workspace(path) then
     notify.error('Cannot open non-existent workspace at "' .. path .. '".')
     return false
@@ -32,7 +32,7 @@ function M.open(path)
 end
 
 --- Close the currently open workspace, if extant.
-function M.close()
+function module.close()
   if workspaces.is_open() then
     workspaces.close(os.time())
   end
@@ -42,7 +42,7 @@ end
 --- If present, an already-extant workspace will be overwrittten.
 --- @param path string directory of workspace
 --- @param userdata? HookspaceUserData initial value of user data (optional)
-function M.init(path, userdata)
+function module.init(path, userdata)
   assert(type(path) == "string", "workspace path must be of type string")
   userdata = userdata or {}
   workspaces.init(path, userdata, os.time())
@@ -52,19 +52,19 @@ end
 --- Move a workspace from one directory to another
 --- @param src string current workspace directory
 --- @param target string new workspace directory
-function M.move(src, target)
+function module.move(src, target)
   workspaces.move(src, target)
 end
 
 --- Get the directory of the currently open workspace
 --- @return string? path to directory of open workspace or `nil`
-function M.get_current_workspace()
+function module.get_current_workspace()
   return workspaces.get_current_root_dir()
 end
 
 --- Get history of recently-accessed workspaces
 --- @return HookspaceRecord[] records containing workspace information
-function M.read_history()
+function module.read_history()
   local results = history.read_records()
   sorting.filter(results, function(r)
     return workspaces.is_workspace(r.rootdir)
@@ -81,7 +81,7 @@ end
 --- Read metadata from a workspace
 --- @param workspace string path to workspace directory or `nil` for current workspace
 --- @return HookspaceWorkspace metadata workspace info
-function M.read_metadata(workspace)
+function module.read_metadata(workspace)
   if not workspace and not state.current_root_dirpath then
     notify.error(
       "Cannot read metadata; no workspace specified "
@@ -102,7 +102,7 @@ end
 --- Write metadata for a workspace
 --- @param workspace string path to workspace directory or `nil` for current workspace
 --- @param metadata HookspaceWorkspace the metadata to write
-function M.write_metadata(workspace, metadata)
+function module.write_metadata(workspace, metadata)
   if not workspace and not state.current_root_dirpath then
     notify.error(
       "Cannot read metadata; no workspace specified "
@@ -123,7 +123,7 @@ end
 --- Read user data a workspace
 --- @param workspace? string path to workspace directory or `nil` for current workspace
 --- @return HookspaceUserData userdata user data of the workspace
-function M.read_user_data(workspace)
+function module.read_user_data(workspace)
   if not workspace and not state.current_root_dirpath then
     notify.error(
       "Cannot read user data; no workspace specified "
@@ -144,7 +144,7 @@ end
 --- Write user data for a workspace
 --- @param workspace? HookspaceWorkspace path to workspace directory or `nil` for current workspace
 --- @param userdata HookspaceUserData the user data to write
-function M.write_user_data(workspace, userdata)
+function module.write_user_data(workspace, userdata)
   if not workspace and not state.current_root_dirpath then
     notify.error(
       "Cannot write user data; no workspace specified "
@@ -165,7 +165,7 @@ end
 --- Check if the directory contains a workspace
 --- @param path string directory to check
 --- @return boolean is_found if a workspace is found
-function M.contains_workspace(path)
+function module.contains_workspace(path)
   return type(path) == "string" and workspaces.contains_workspace(path)
 end
 
@@ -195,7 +195,7 @@ end
 
 --- Prepare hookspace for use
 ---@param opts HookspaceOptions options
-function M.setup(opts)
+function module.setup(opts)
   if opts.verbose ~= nil and type(opts.verbose) == "number" then
     state.verbose = opts.verbose
   end
@@ -207,7 +207,7 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("HookspaceInit", function(tbl)
     if tbl and tbl.fargs then
       for _, rootdir in ipairs(tbl.fargs) do
-        M.init(rootdir)
+        module.init(rootdir)
       end
     end
   end, {
@@ -218,7 +218,7 @@ function M.setup(opts)
   })
   vim.api.nvim_create_user_command("HookspaceList", function(tbl)
     local simplified = {}
-    for _, v in pairs(M.read_history()) do
+    for _, v in pairs(module.read_history()) do
       table.insert(simplified, v.rootdir)
     end
     print(vim.inspect(simplified))
@@ -230,7 +230,7 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("HookspaceOpen", function(tbl)
     if tbl and tbl.fargs then
       for _, rootdir in ipairs(tbl.fargs) do
-        M.open(rootdir)
+        module.open(rootdir)
         break
       end
     end
@@ -241,7 +241,7 @@ function M.setup(opts)
     complete = "file",
   })
   vim.api.nvim_create_user_command("HookspaceClose", function(tbl)
-    M.close()
+    module.close()
   end, {
     desc = "close the currently open workspace",
     force = true,
@@ -284,10 +284,10 @@ function M.setup(opts)
   vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
     group = "hookspace",
     callback = function(tbl)
-      M.close()
+      module.close()
     end,
     desc = "automatically close hookspace when exiting app",
   })
 end
 
-return M
+return module

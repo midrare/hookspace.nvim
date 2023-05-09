@@ -1,11 +1,11 @@
 local modulename, _ = ...
-local moduleroot = modulename:gsub('(.+)%..+', '%1')
+local moduleroot = modulename:gsub("(.+)%..+", "%1")
 
-local state = require(moduleroot .. '.state')
+local state = require(moduleroot .. ".state")
 
-local M = {}
+local module = {}
 
-function M.error(msg, verbosity)
+function module.error(msg, verbosity)
   if verbosity == nil then
     verbosity = 1
   end
@@ -15,7 +15,7 @@ function M.error(msg, verbosity)
   end
 end
 
-function M.trace(msg, verbosity)
+function module.trace(msg, verbosity)
   if verbosity == nil then
     verbosity = 1
   end
@@ -25,7 +25,7 @@ function M.trace(msg, verbosity)
   end
 end
 
-function M.info(msg, verbosity)
+function module.info(msg, verbosity)
   if verbosity == nil then
     verbosity = 1
   end
@@ -35,7 +35,7 @@ function M.info(msg, verbosity)
   end
 end
 
-function M.debug(msg, verbosity)
+function module.debug(msg, verbosity)
   if verbosity == nil then
     verbosity = 1
   end
@@ -45,7 +45,7 @@ function M.debug(msg, verbosity)
   end
 end
 
-function M.warn(msg, verbosity)
+function module.warn(msg, verbosity)
   if verbosity == nil then
     verbosity = 1
   end
@@ -55,4 +55,4 @@ function M.warn(msg, verbosity)
   end
 end
 
-return M
+return module

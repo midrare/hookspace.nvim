@@ -7,7 +7,7 @@ local notify = require(moduleroot .. '.notify')
 local paths = require(moduleroot .. '.path')
 local state = require(moduleroot .. '.state')
 
-local M = {}
+local module = {}
 
 ---@param hooks string|HookspaceHook|HookspaceHook[]
 ---@param workspace HookspaceWorkspace
@@ -188,7 +188,7 @@ end
 ---@param rootdir string path to workspace root dir
 ---@param user_data? HookspaceUserData initial user data
 ---@param timestamp integer epoch sec to record as last access time
-function M.init(rootdir, user_data, timestamp)
+function module.init(rootdir, user_data, timestamp)
   assert(type(rootdir) == 'string', 'type of workspace path must be string')
   assert(type(user_data) == 'table', 'type of user data must be table')
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
@@ -198,7 +198,7 @@ end
 
 ---@param src string path to old workspace root dir
 ---@param target string path to new workspace root dir
-function M.move(src, target)
+function module.move(src, target)
   assert(type(src) == 'string', 'source workspace path must be a string')
   assert(type(target) == 'string', 'target workspace path must be a string')
   local p1 = paths.canonical(src)
@@ -208,7 +208,7 @@ end
 
 ---@param rootdir string path to root of workspace
 ---@param timestamp integer epoch sec to record as last access time
-function M.open(rootdir, timestamp)
+function module.open(rootdir, timestamp)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
   local p = paths.canonical(rootdir)
@@ -216,23 +216,23 @@ function M.open(rootdir, timestamp)
 end
 
 ---@param timestamp integer epoch sec to record as last access time
-function M.close(timestamp)
+function module.close(timestamp)
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
   close_workspace(timestamp)
 end
 
 ---@return boolean is_open if a workspace is currently open or not
-function M.is_open()
+function module.is_open()
   return state.current_root_dirpath ~= nil
 end
 
 ---@return string? dir root dir of currently open workspace
-function M.get_current_root_dir()
+function module.get_current_root_dir()
   return state.current_root_dirpath
 end
 
 ---@return string? dir data dir of currently open workspace
-function M.get_current_data_dir()
+function module.get_current_data_dir()
   if state.current_root_dirpath ~= nil then
     return state.current_root_dirpath .. paths.sep() .. state.data_dirname
   end
@@ -241,13 +241,13 @@ end
 
 ---@param rootdir string workspace root dir
 ---@return string datadir workspace data dir
-function M.get_data_dir(rootdir)
+function module.get_data_dir(rootdir)
   return rootdir .. paths.sep() .. state.data_dirname
 end
 
 ---@param rootdir string path to root of workspace
 ---@return boolean is_workspace true if is root dir of a workspace
-function M.is_workspace(rootdir)
+function module.is_workspace(rootdir)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local datadir = rootdir .. paths.sep() .. state.data_dirname
   return vim.fn.isdirectory(datadir) == 1
@@ -255,7 +255,7 @@ end
 
 ---@param rootdir string path to root of workspace
 ---@return HookspaceWorkspace? workspace info
-function M.read_metadata(rootdir)
+function module.read_metadata(rootdir)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir
     .. paths.sep()
@@ -267,7 +267,7 @@ end
 
 ---@param rootdir string path to root of workspace
 ---@param metadata HookspaceWorkspace workspace info
-function M.write_metadata(rootdir, metadata)
+function module.write_metadata(rootdir, metadata)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir
     .. paths.sep()
@@ -279,7 +279,7 @@ end
 
 ---@param rootdir string workspace root dir path
 ---@return HookspaceUserData userdata user data
-function M.read_user_data(rootdir)
+function module.read_user_data(rootdir)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir
     .. paths.sep()
@@ -291,7 +291,7 @@ end
 
 ---@param rootdir string workspace root dir path
 ---@param user_data HookspaceUserData user data
-function M.write_user_data(rootdir, user_data)
+function module.write_user_data(rootdir, user_data)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir
     .. paths.sep()
@@ -301,4 +301,4 @@ function M.write_user_data(rootdir, user_data)
   file.write_json(p, user_data)
 end
 
-return M
+return module
