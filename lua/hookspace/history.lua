@@ -75,7 +75,7 @@ function module.read_records()
 end
 
 ---@return string[] rootdirs workspace root dirs
-function module.read_rootdirs()
+function module.read_root_dirs()
   local records = read_records()
   sorting.transform(records, function(r)
     return r.rootdir

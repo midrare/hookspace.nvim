@@ -241,7 +241,7 @@ end
 
 ---@param rootdir string workspace root dir
 ---@return string datadir workspace data dir
-function M.get_datadir(rootdir)
+function M.get_data_dir(rootdir)
   return rootdir .. paths.sep() .. state.data_dirname
 end
 

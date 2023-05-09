@@ -71,7 +71,7 @@ function M.read_history()
   end)
   sorting.transform(results, function(r)
     local o = workspaces.read_metadata(r.rootdir)
-    o.datadir = workspaces.get_datadir(r.rootdir)
+    o.datadir = workspaces.get_data_dir(r.rootdir)
     o = vim.tbl_deep_extend("force", r, o)
     return o
   end)
