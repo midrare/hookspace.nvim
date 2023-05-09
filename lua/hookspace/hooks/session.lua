@@ -4,6 +4,7 @@ local module = {}
 local default_opts = {}
 local user_opts = vim.tbl_deep_extend("force", {}, default_opts)
 
+local _ = nil
 local bufdel = {}
 _, bufdel.closebuffers = pcall(require, 'close_buffers')
 _, bufdel.bufdelete = pcall(require, 'bufdelete')
