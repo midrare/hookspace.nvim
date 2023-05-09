@@ -1,8 +1,8 @@
 local modulename, _ = ...
 local moduleroot = modulename:gsub("(.+)%..+", "%1")
 
-local file = require(moduleroot .. ".file")
-local paths = require(moduleroot .. ".path")
+local file = require(moduleroot .. ".files")
+local paths = require(moduleroot .. ".paths")
 local sorting = require(moduleroot .. ".sorting")
 
 local records_path = vim.fn.stdpath("data")

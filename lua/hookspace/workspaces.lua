@@ -1,10 +1,10 @@
 local modulename, _ = ...
 local moduleroot = modulename:gsub('(.+)%..+', '%1')
 
-local file = require(moduleroot .. '.file')
+local file = require(moduleroot .. '.files')
 local history = require(moduleroot .. '.history')
 local notify = require(moduleroot .. '.notify')
-local paths = require(moduleroot .. '.path')
+local paths = require(moduleroot .. '.paths')
 local state = require(moduleroot .. '.state')
 
 local module = {}

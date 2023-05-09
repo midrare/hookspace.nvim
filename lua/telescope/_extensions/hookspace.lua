@@ -4,7 +4,7 @@ local moduleroot = modulename:gsub("(.+)%..+", "%1")
 local paths = require(moduleroot .. ".paths")
 local hookspace = require("hookspace")
 local state = require("hookspace.state")
-local workspaces = require("hookspace.workspace")
+local workspaces = require("hookspace.workspaces")
 
 local actions = require("telescope.actions")
 local actions_state = require("telescope.actions.state")

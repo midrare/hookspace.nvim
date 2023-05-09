@@ -1,7 +1,7 @@
 local modulename, _ = ...
 local moduleroot = modulename:gsub("(.+)%..+", "%1")
 
-local paths = require(moduleroot .. ".path")
+local paths = require(moduleroot .. ".paths")
 
 local module = {}
 

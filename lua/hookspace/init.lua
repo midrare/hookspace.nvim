@@ -3,10 +3,10 @@ local os = require("os")
 
 local history = require(modulename .. ".history")
 local state = require(modulename .. ".state")
-local paths = require(modulename .. ".path")
+local paths = require(modulename .. ".paths")
 local notify = require(modulename .. ".notify")
 local sorting = require(modulename .. ".sorting")
-local workspaces = require(modulename .. ".workspace")
+local workspaces = require(modulename .. ".workspaces")
 
 local module = {}
 
