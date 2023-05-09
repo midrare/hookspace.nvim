@@ -112,26 +112,21 @@ end
 ---@param timestamp integer last access timestamp
 function module.update(path, timestamp)
   local records = read_records()
-  local matches = sorting.filtered(records, function(r)
-    return is_record_has_path(r, path)
-  end) or {}
 
-  sorting.filter(records, function(r)
-    return not is_record_has_path(r, path)
-  end)
-
-  if matches and #matches >= 1 then
-    for _, record in ipairs(matches) do
+  local is_found = false
+  for _, record in ipairs(records) do
+    if is_record_has_path(record, path) then
       record.last_accessed = timestamp
-      table.insert(records, record)
+      is_found = true
     end
-  else
+  end
+
+  if not is_found then
     local canonical = paths.normpath(paths.normcase(path))
     local record = { last_accessed = timestamp, rootdir = canonical }
     table.insert(records, record)
   end
 
-  sorting.uniqify(records, is_record_same)
   write_records(records)
 end
 
