@@ -1,6 +1,9 @@
 local modulename, _ = ...
 local module = {}
 
+local default_opts = {}
+local user_opts = vim.tbl_deep_extend("force", {}, default_opts)
+
 local bufdel = {}
 _, bufdel.closebuffers = pcall(require, 'close_buffers')
 _, bufdel.bufdelete = pcall(require, 'bufdelete')
@@ -56,6 +59,10 @@ local function close_buffer(bufnr)
     ---@diagnostic disable-next-line: param-type-mismatch
     pcall(vim.cmd, 'bd! ' .. bufnr)
   end
+end
+
+function module.setup(opts)
+  user_opts = vim.tbl_deep_extend("force", default_opts, opts)
 end
 
 function module.on_open(workspace, user_data)

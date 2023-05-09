@@ -1,5 +1,8 @@
 local module = {}
 
+local default_opts = { filename = 'env.json' }
+local user_opts = vim.tbl_deep_extend("force", {}, default_opts)
+
 local old_env_names = nil
 local old_env_values = nil
 
@@ -22,11 +25,15 @@ local function is_var_name_sane(varname)
   return string.match(varname, "^[a-zA-Z0-9_\\-]*$")
 end
 
+function module.setup(opts)
+  user_opts = vim.tbl_deep_extend("force", default_opts, opts)
+end
+
 function module.on_open(workspace, user_data)
   old_env_names = {}
   old_env_values = {}
 
-  local cfg_path = workspace.datadir .. sep .. 'environment.json'
+  local cfg_path = workspace.datadir .. sep .. user_opts.filename
   if vim.fn.filereadable(cfg_path) >= 1 then
     local plaintext = vim.fn.readfile(cfg_path, 'B')
     if plaintext then

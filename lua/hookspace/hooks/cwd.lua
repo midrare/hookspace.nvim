@@ -1,6 +1,13 @@
 local module = {}
 
+local default_opts = {}
+local user_opts = vim.tbl_deep_extend("force", {}, default_opts)
+
 local old_global_cwd = nil
+
+function module.setup(opts)
+  user_opts = vim.tbl_deep_extend("force", default_opts, opts)
+end
 
 function module.on_open(workspace, user_data)
   old_global_cwd = vim.fn.getcwd(-1, -1)
