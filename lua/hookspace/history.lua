@@ -1,17 +1,16 @@
-local modulename, _ = ...
-local moduleroot = modulename:gsub("(.+)%..+", "%1")
+local module, _ = {}, nil
+module.name, _ = ...
 
-local file = require(moduleroot .. ".files")
-local paths = require(moduleroot .. ".paths")
-local sorting = require(moduleroot .. ".sorting")
+local moduleroot = module.name:gsub("(.+)%..+", "%1")
+local arrays = require(moduleroot .. ".nvaux.arrays")
+local files = require(moduleroot .. ".nvaux.files")
+local paths = require(moduleroot .. ".nvaux.paths")
 
 local records_path = vim.fn.stdpath("data")
   .. paths.sep()
   .. "hookspace"
   .. paths.sep()
   .. "workspaces.json"
-
-local module = {}
 
 local function is_record_valid(r)
   return r.rootdir
@@ -22,13 +21,8 @@ local function is_record_valid(r)
     )
 end
 
-local function is_record_same(r1, r2)
-  local c1 = paths.normpath(paths.normcase(r1.rootdir))
-  local c2 = paths.normpath(paths.normcase(r2.rootdir))
-  return r1.rootdir == r2.rootdir
-    or c1 == r2.rootdir
-    or r1.rootdir == c2
-    or c1 == c2
+local function get_last_accessed(r)
+  return r and r.last_accessed or 0
 end
 
 local function is_record_has_path(r, path)
@@ -37,47 +31,54 @@ local function is_record_has_path(r, path)
 end
 
 local function cmp_last_accessed(r1, r2)
-  if r1.last_accessed < r2.last_accessed then
+  if not r1.last_accessed and not r2.last_accessed then
+    return 0
+  elseif
+    (r1.last_accessed and not r2.last_accessed)
+    or (r1.last_accessed < r2.last_accessed)
+  then
     return -1
-  elseif r1.last_accessed > r2.last_accessed then
+  elseif
+    (not r1.last_accessed and r2.last_accessed)
+    or (r1.last_accessed > r2.last_accessed)
+  then
     return 1
   end
   return 0
 end
 
-local function read_records(cmp, reverse)
-  if cmp == nil then
-    cmp = cmp_last_accessed
-    reverse = true
-  end
-
+local function _read_records()
   local records = {}
 
   if vim.fn.filereadable(records_path) == 1 then
-    records = file.read_json(records_path) or {}
-    sorting.sort(records, cmp, reverse)
-    sorting.filter(records, is_record_valid)
-    sorting.uniqify(records, is_record_same)
+    records = files.read_json(records_path) or records
+    table.sort(records, function(a, b)
+      return cmp_last_accessed(a, b) > 0
+    end)
+    arrays.filter(records, is_record_valid)
+    arrays.uniqify(records, get_last_accessed)
   end
 
   return records
 end
 
 local function write_records(records)
-  sorting.uniqify(records, is_record_same)
-  sorting.sort(records, cmp_last_accessed, true)
-  file.write_json(records_path, records)
+  arrays.uniqify(records, get_last_accessed)
+  table.sort(records, function(a, b)
+    return cmp_last_accessed(a, b) > 0
+  end)
+  files.write_json(records_path, records)
 end
 
 ---@return HookspaceRecord[] records workspace access records
 function module.read_records()
-  return read_records()
+  return _read_records()
 end
 
 ---@return string[] rootdirs workspace root dirs
 function module.read_root_dirs()
-  local records = read_records()
-  sorting.transform(records, function(r)
+  local records = _read_records()
+  arrays.transform(records, function(r)
     return r.rootdir
   end)
   return records
@@ -85,8 +86,8 @@ end
 
 ---@param path string workspace root dir
 function module.delete(path)
-  local records = read_records()
-  sorting.filter(records, function(r)
+  local records = _read_records()
+  arrays.filter(records, function(r)
     return not is_record_has_path(r, path)
   end)
   write_records(records)
@@ -95,13 +96,13 @@ end
 ---@param old_path string old workspace root dir
 ---@param new_path string new workspace root dir
 function module.move(old_path, new_path)
-  local records = read_records()
-  sorting.filter(records, function(r)
+  local records = _read_records()
+  arrays.filter(records, function(r)
     return is_record_has_path(r, old_path)
   end)
 
   local canonical = paths.normpath(paths.normcase(new_path))
-  sorting.apply(records, function(r)
+  arrays.apply(records, function(r)
     r.rootdir = canonical
   end)
 
@@ -111,7 +112,7 @@ end
 ---@param path string workspace root dir
 ---@param timestamp integer last access timestamp
 function module.update(path, timestamp)
-  local records = read_records()
+  local records = _read_records()
 
   local is_found = false
   for _, record in ipairs(records) do

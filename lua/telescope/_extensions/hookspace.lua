@@ -1,8 +1,8 @@
 local modulename, _ = ...
+---@diagnostic disable-next-line: unused-local
 local moduleroot = modulename:gsub("(.+)%..+", "%1")
 
 local hookspace = require("hookspace")
-local paths = require("hookspace.paths")
 local state = require("hookspace.state")
 local workspaces = require("hookspace.workspaces")
 
@@ -16,11 +16,19 @@ local telescope = require("telescope")
 local default_opts = {}
 local global_opts = vim.tbl_deep_extend("force", {}, default_opts)
 
+local function basename(filename)
+  local bname, _ = filename:gsub("^.*[\\/](.+)[\\/]*", "%1")
+  if not bname or #bname <= 0 then
+    return nil
+  end
+  return bname
+end
+
 local function to_display(entry)
   local hls = {}
   local display = entry.metadata.name
   if not display and entry.rootdir then
-    display = paths.basename(entry.rootdir)
+    display = basename(entry.rootdir)
   end
 
   if entry.rootdir then
@@ -32,31 +40,31 @@ local function to_display(entry)
   return display, hls
 end
 
+local function to_entry(record)
+  if
+    not record
+    or not record.rootdir
+    or vim.fn.isdirectory(record.rootdir) < 1
+  then
+    return nil
+  end
+  local meta = workspaces.read_metadata(record.rootdir) or {}
+  return {
+    value = record.rootdir,
+    metadata = meta,
+    display = to_display,
+    ordinal = meta and meta.name or basename(record.rootdir),
+    rootdir = record.rootdir,
+  }
+end
+
 local function open_picker(opts)
   pickers
     .new(opts, {
       prompt_title = opts.title or state.plugin_name,
       finder = finders.new_table({
         results = hookspace.read_history(),
-        entry_maker = function(entry)
-          if
-            not entry
-            or not entry.rootdir
-            or vim.fn.isdirectory(entry.rootdir) < 1
-          then
-            return nil
-          end
-          local metadata = workspaces.read_metadata(entry.rootdir) or {}
-          return {
-            value = entry.rootdir,
-            metadata = metadata,
-            display = to_display,
-            ordinal = metadata.name
-              or paths.basename(entry.rootdir)
-              or tostring(entry.last_accessed or 0),
-            rootdir = entry.rootdir,
-          }
-        end,
+        entry_maker = to_entry,
       }),
       sorter = conf.values.generic_sorter(opts),
       attach_mappings = function(prompt_bufnr, map)

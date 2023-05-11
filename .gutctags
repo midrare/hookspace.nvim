@@ -25,3 +25,4 @@
 --exclude=*/release/*
 --exclude=*/vcpkg/*
 --exclude=*/vcpkg_installed/*
+--exclude=*/luaunit.lua

@@ -1,14 +1,15 @@
-local modulename, _ = ...
-local os = require("os")
-
-local history = require(modulename .. ".history")
-local state = require(modulename .. ".state")
-local paths = require(modulename .. ".paths")
-local notify = require(modulename .. ".notify")
-local sorting = require(modulename .. ".sorting")
-local workspaces = require(modulename .. ".workspaces")
-
 local module = {}
+module.name, _ = ...
+
+local os = require("os")
+local arrays = require(module.name .. '.nvaux.arrays')
+local paths = require(module.name .. '.nvaux.paths')
+local tables = require(module.name .. '.nvaux.tables')
+local history = require(module.name .. ".history")
+local state = require(module.name .. ".state")
+local notify = require(module.name .. ".notify")
+local workspaces = require(module.name .. ".workspaces")
+
 
 --- Check if a workspace is currently open
 --- @return boolean is_open if a workspace is open
@@ -66,15 +67,15 @@ end
 --- @return HookspaceRecord[] records containing workspace information
 function module.read_history()
   local results = history.read_records()
-  sorting.filter(results, function(r)
-    return workspaces.is_workspace(r.rootdir)
-  end)
-  sorting.transform(results, function(r)
-    local o = workspaces.read_metadata(r.rootdir)
-    o.datadir = workspaces.get_data_dir(r.rootdir)
-    o = vim.tbl_deep_extend("force", r, o)
-    return o
-  end)
+  -- arrays.filter(results, function(r)
+  --   return workspaces.is_workspace(r.rootdir)
+  -- end)
+  -- arrays.transform(results, function(r)
+  --   local o = workspaces.read_metadata(r.rootdir)
+  --   o.datadir = workspaces.get_data_dir(r.rootdir)
+  --   o = vim.tbl_deep_extend("force", r, o)
+  --   return o
+  -- end)
   return results
 end
 
@@ -184,7 +185,7 @@ local function _history_complete(arg_lead, cmd_line, cursor_pos)
 
   -- -- insert from filesystem
   -- if arg_lead and arg_lead:gsub("%s*", "") ~= "" then
-  --   local glob = arg_lead:gsub("[\\/]+$", "") .. paths.sep() .. "*"
+  --   local glob = arg_lead:gsub("[\\/]+$", "") .. aux.paths.sep() .. "*"
   --   for _, p in ipairs(vim.fn.glob(glob, false, true)) do
   --     table.insert(filepaths, p)
   --   end
@@ -219,7 +220,9 @@ function module.setup(opts)
   vim.api.nvim_create_user_command("HookspaceList", function(tbl)
     local simplified = {}
     for _, v in pairs(module.read_history()) do
-      table.insert(simplified, v.rootdir)
+      if v.rootdir then
+        table.insert(simplified, v.rootdir)
+      end
     end
     print(vim.inspect(simplified))
   end, {
@@ -230,8 +233,10 @@ function module.setup(opts)
   vim.api.nvim_create_user_command("HookspaceOpen", function(tbl)
     if tbl and tbl.fargs then
       for _, rootdir in ipairs(tbl.fargs) do
-        module.open(rootdir)
-        break
+        if rootdir then
+          module.open(rootdir)
+          break
+        end
       end
     end
   end, {

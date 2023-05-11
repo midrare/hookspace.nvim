@@ -1,10 +1,10 @@
 local modulename, _ = ...
 local moduleroot = modulename:gsub('(.+)%..+', '%1')
 
-local file = require(moduleroot .. '.files')
+local files = require(moduleroot .. '.nvaux.files')
+local paths = require(moduleroot .. '.nvaux.paths')
 local history = require(moduleroot .. '.history')
 local notify = require(moduleroot .. '.notify')
-local paths = require(moduleroot .. '.paths')
 local state = require(moduleroot .. '.state')
 
 local module = {}
@@ -67,7 +67,7 @@ local function init_workspace(rootdir, userdata, timestamp)
     return
   end
 
-  file.write_json(metafile, {
+  files.write_json(metafile, {
     name = paths.basename(paths.normpath(rootdir)),
     created = timestamp,
   })
@@ -76,15 +76,15 @@ local function init_workspace(rootdir, userdata, timestamp)
     return
   end
 
-  file.write_json(userdatafile, userdata)
+  files.write_json(userdatafile, userdata)
   if vim.fn.filereadable(userdatafile) == 0 then
     error('failed to write workspace user data file "' .. userdatafile .. '"')
     return
   end
 
-  file.write_file(datadir .. paths.sep() .. '.notags')
-  file.write_file(datadir .. paths.sep() .. '.ignore', '*')
-  file.write_file(datadir .. paths.sep() .. '.gitignore',
+  files.write_file(datadir .. paths.sep() .. '.notags')
+  files.write_file(datadir .. paths.sep() .. '.ignore', '*')
+  files.write_file(datadir .. paths.sep() .. '.gitignore',
     'session\n'
     .. 'Session.vim\n'
     .. 'PreSession.vim\n'
@@ -93,7 +93,7 @@ local function init_workspace(rootdir, userdata, timestamp)
 
   run_hooks(state.on_init, { rootdir = rootdir, datadir = datadir }, userdata)
 
-  file.write_json(userdatafile, userdata)
+  files.write_json(userdatafile, userdata)
   history.update(rootdir, timestamp)
 end
 
@@ -143,20 +143,20 @@ local function open_workspace(rootdir, timestamp)
   )
 
   local datadir = rootdir .. paths.sep() .. state.data_dirname
-  local metafile = datadir .. paths.sep() .. state.metadata_filename
-  local userdatafile = datadir .. paths.sep() .. state.user_data_filename
+  local meta_file = datadir .. paths.sep() .. state.metadata_filename
+  local user_file = datadir .. paths.sep() .. state.user_data_filename
 
   if vim.fn.isdirectory(datadir) == 0 then
     error('failed to open non-existent workspace "' .. datadir .. '"')
     return
   end
 
-  local user_data = file.read_json(userdatafile) or {}
+  local user_data = files.read_json(user_file) or {}
   run_hooks(state.on_open, {
     rootdir = rootdir,
     datadir = datadir,
   }, user_data)
-  file.write_json(userdatafile, user_data)
+  files.write_json(user_file, user_data)
   state.current_rootdir = rootdir
   history.update(rootdir, timestamp)
 end
@@ -175,12 +175,12 @@ local function close_workspace(timestamp)
   local metafile = datadir .. paths.sep() .. state.metadata_filename
   local userdatafile = datadir .. paths.sep() .. state.user_data_filename
 
-  local user_data = file.read_json(userdatafile) or {}
+  local user_data = files.read_json(userdatafile) or {}
   run_hooks(state.on_close, {
     rootdir = state.current_rootdir,
     datadir = datadir,
   }, user_data)
-  file.write_json(userdatafile, user_data)
+  files.write_json(userdatafile, user_data)
   history.update(state.current_rootdir, timestamp)
   state.current_rootdir = nil
 end
@@ -262,7 +262,7 @@ function module.read_metadata(rootdir)
     .. state.data_dirname
     .. paths.sep()
     .. state.metadata_filename
-  return file.read_json(p)
+  return files.read_json(p)
 end
 
 ---@param rootdir string path to root of workspace
@@ -274,7 +274,7 @@ function module.write_metadata(rootdir, metadata)
     .. state.data_dirname
     .. paths.sep()
     .. state.metadata_filename
-  file.write_json(p, metadata)
+  files.write_json(p, metadata)
 end
 
 ---@param rootdir string workspace root dir path
@@ -286,7 +286,7 @@ function module.read_user_data(rootdir)
     .. state.data_dirname
     .. paths.sep()
     .. state.user_data_filename
-  return file.read_json(p) or {}
+  return files.read_json(p) or {}
 end
 
 ---@param rootdir string workspace root dir path
@@ -298,7 +298,7 @@ function module.write_user_data(rootdir, user_data)
     .. state.data_dirname
     .. paths.sep()
     .. state.user_data_filename
-  file.write_json(p, user_data)
+  files.write_json(p, user_data)
 end
 
 return module
