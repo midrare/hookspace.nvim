@@ -1,3 +1,4 @@
 [submodule "lua/hookspace/nvaux"]
 	path = lua/hookspace/nvaux
 	url = git@github.com:midrare/aux.nvim.git
+    ignore = dirty
