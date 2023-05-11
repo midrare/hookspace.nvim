@@ -1,8 +1,8 @@
 local modulename, _ = ...
 local moduleroot = modulename:gsub('(.+)%..+', '%1')
 
-local files = require(moduleroot .. '.nvaux.files')
-local paths = require(moduleroot .. '.nvaux.paths')
+local files = require(moduleroot .. '.luamisc.files')
+local paths = require(moduleroot .. '.luamisc.paths')
 local history = require(moduleroot .. '.history')
 local notify = require(moduleroot .. '.notify')
 local state = require(moduleroot .. '.state')

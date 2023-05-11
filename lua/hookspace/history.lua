@@ -2,9 +2,9 @@ local module, _ = {}, nil
 module.name, _ = ...
 
 local moduleroot = module.name:gsub("(.+)%..+", "%1")
-local arrays = require(moduleroot .. ".nvaux.arrays")
-local files = require(moduleroot .. ".nvaux.files")
-local paths = require(moduleroot .. ".nvaux.paths")
+local arrays = require(moduleroot .. ".luamisc.arrays")
+local files = require(moduleroot .. ".luamisc.files")
+local paths = require(moduleroot .. ".luamisc.paths")
 
 local records_path = vim.fn.stdpath("data")
   .. paths.sep()

@@ -2,9 +2,9 @@ local module = {}
 module.name, _ = ...
 
 local os = require("os")
-local arrays = require(module.name .. '.nvaux.arrays')
-local paths = require(module.name .. '.nvaux.paths')
-local tables = require(module.name .. '.nvaux.tables')
+local arrays = require(module.name .. '.luamisc.arrays')
+local paths = require(module.name .. '.luamisc.paths')
+local tables = require(module.name .. '.luamisc.tables')
 local history = require(module.name .. ".history")
 local state = require(module.name .. ".state")
 local notify = require(module.name .. ".notify")
