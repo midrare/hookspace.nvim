@@ -59,7 +59,7 @@ local function close_buffer(bufnr)
     pcall(bufdel.bufdelete.bufdelete, bufnr, true)
   else
     ---@diagnostic disable-next-line: param-type-mismatch
-    pcall(vim.cmd, "bd! " .. bufnr)
+    pcall(vim.cmd, "silent! bd! " .. bufnr)
   end
 end
 
