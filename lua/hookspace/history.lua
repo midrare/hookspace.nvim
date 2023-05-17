@@ -23,9 +23,10 @@ local function get_last_accessed(r)
   return r and r.last_accessed or 0
 end
 
-local function is_record_has_path(r, path)
+local function is_record_has_path(r, rootdir)
   local c = paths.normpath(paths.normcase(r.rootdir))
-  return path == r.rootdir or path == r.rootdir or path == c or path == c
+  return rootdir == r.rootdir or rootdir == r.rootdir
+    or rootdir == c or rootdir == c
 end
 
 local function cmp_last_accessed(r1, r2)
@@ -82,24 +83,24 @@ function module.read_root_dirs()
   return records
 end
 
----@param path string workspace root dir
-function module.delete(path)
+---@param rootdir string workspace root dir
+function module.delete(rootdir)
   local records = _read_records()
   arrays.filter(records, function(r)
-    return not is_record_has_path(r, path)
+    return not is_record_has_path(r, rootdir)
   end)
   write_records(records)
 end
 
----@param old_path string old workspace root dir
----@param new_path string new workspace root dir
-function module.move(old_path, new_path)
+---@param src string old workspace root dir
+---@param dest string new workspace root dir
+function module.move(src, dest)
   local records = _read_records()
   arrays.filter(records, function(r)
-    return is_record_has_path(r, old_path)
+    return is_record_has_path(r, src)
   end)
 
-  local canonical = paths.normpath(paths.normcase(new_path))
+  local canonical = paths.normpath(paths.normcase(dest))
   arrays.apply(records, function(r)
     r.rootdir = canonical
   end)
@@ -107,21 +108,21 @@ function module.move(old_path, new_path)
   write_records(records)
 end
 
----@param path string workspace root dir
+---@param rootdir string workspace root dir
 ---@param timestamp integer last access timestamp
-function module.update(path, timestamp)
+function module.update(rootdir, timestamp)
   local records = _read_records()
 
   local is_found = false
   for _, record in ipairs(records) do
-    if is_record_has_path(record, path) then
+    if is_record_has_path(record, rootdir) then
       record.last_accessed = timestamp
       is_found = true
     end
   end
 
   if not is_found then
-    local canonical = paths.normpath(paths.normcase(path))
+    local canonical = paths.normpath(paths.normcase(rootdir))
     local record = { last_accessed = timestamp, rootdir = canonical }
     table.insert(records, record)
   end
