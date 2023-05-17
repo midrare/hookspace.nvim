@@ -1,15 +1,13 @@
 local M = {}
 
-local default_opts = { filename = "env.json" }
+local default_opts = { filename = "env.json", global = false }
+---@diagnostic disable-next-line: unused-local
 local user_opts = vim.deepcopy(default_opts)
 
-local old_env_names = nil
-local old_env_values = nil
+local env_filename = "env.json"
+local old_env = nil
 
-local sep = "/"
-if vim.fn.has("win32") >= 1 then
-  sep = "\\"
-end
+local sep = vim.fn.has("win32") >= 1 and "\\" or "/"
 
 local function tbl_sub_all(tbl, pat, repl)
   for k, v in pairs(tbl) do
@@ -25,63 +23,57 @@ local function is_var_name_sane(varname)
   return string.match(varname, "^[a-zA-Z0-9_\\-]*$")
 end
 
+local function read_env_file(workspace, filename)
+  local plaintext = vim.fn.readfile(filename, "B")
+  if not plaintext then
+    return nil
+  end
+  local env = vim.fn.json_decode(plaintext)
+  tbl_sub_all(env, "{rootdir}", workspace.rootdir)
+  tbl_sub_all(env, "{datadir}", workspace.datadir)
+  tbl_sub_all(env, "{userdir}", workspace.userdir)
+  return env
+end
+
 function M.setup(opts)
+  ---@diagnostic disable-next-line: unused-local
   user_opts = vim.tbl_deep_extend("force", default_opts, opts)
 end
 
 function M.on_open(workspace)
-  old_env_names = {}
-  old_env_values = {}
+  old_env = {}
 
-  local cfg_path = workspace.datadir .. sep .. user_opts.filename
-  if vim.fn.filereadable(cfg_path) >= 1 then
-    local plaintext = vim.fn.readfile(cfg_path, "B")
-    if plaintext then
-      local localenv = vim.fn.json_decode(plaintext)
-      tbl_sub_all(localenv, "{rootdir}", workspace.rootdir)
-      tbl_sub_all(localenv, "{datadir}", workspace.datadir)
-      tbl_sub_all(localenv, "{userdir}", workspace.userdir)
+  local global_file = workspace.datadir .. sep .. env_filename
+  local user_file = workspace.userdir .. sep .. env_filename
 
-      ---@diagnostic disable-next-line: param-type-mismatch
-      for name, value in pairs(localenv) do
-        if is_var_name_sane(name) then
-          table.insert(old_env_names, name)
-          old_env_values[name] = os.getenv(name)
+  if vim.fn.filereadable(global_file) >= 1 then
+    local global_env = {}
+    if user_opts.global then
+      global_env = read_env_file(workspace, global_file) or {}
+    end
 
-          -- safer than interpolating the value directly
-          vim.g.ORVQUZFPUA = name
-          vim.g.ULSSYOZRYK = value
-          vim.cmd("call setenv(g:ORVQUZFPUA, g:ULSSYOZRYK)")
-          vim.g.ORVQUZFPUA = nil
-          vim.g.ULSSYOZRYK = nil
-        end
+    local user_env = read_env_file(workspace, user_file) or {}
+    local new_env = vim.tbl_deep_extend("force", global_env, user_env)
+
+    for name, value in pairs(new_env) do
+      if is_var_name_sane(name) then
+        old_env[name] = os.getenv(name) or false
+        vim.fn.setenv(name, value or nil)
       end
     end
   end
-  vim.api.nvim_set_current_dir(workspace.rootdir)
 end
 
 ---@diagnostic disable-next-line: unused-local
 function M.on_close(workspace)
-  if old_env_names then
-    for _, name in ipairs(old_env_names) do
+  if old_env then
+    for name, value in pairs(old_env) do
       if is_var_name_sane(name) then
-        local value = old_env_values[name]
-        -- safer than interpolating the value directly
-        vim.g.ORVQUZFPUA = name
-        vim.g.ULSSYOZRYK = value
-        if value ~= nil then
-          vim.cmd("call setenv(g:ORVQUZFPUA, g:ULSSYOZRYK)")
-        else
-          vim.cmd("call setenv(g:ORVQUZFPUA, v:null)")
-        end
-        vim.g.ORVQUZFPUA = nil
-        vim.g.ULSSYOZRYK = nil
+        vim.fn.setenv(name, value or nil)
       end
     end
 
-    old_env_names = nil
-    old_env_values = nil
+    old_env = nil
   end
 end
 
