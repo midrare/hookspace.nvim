@@ -1,4 +1,4 @@
-local module = {}
+local M = {}
 
 local os = require("os")
 local arrays = require('hookspace.luamisc.arrays')
@@ -11,14 +11,14 @@ local workspaces = require("hookspace.workspaces")
 
 --- Check if a workspace is currently open
 --- @return boolean is_open if a workspace is open
-function module.is_open()
+function M.is_open()
   return workspaces.is_open()
 end
 
 --- Open a workspace
 --- Any currently open workspace will be closed.
 --- @param path string directory of the workspace to open
-function module.open(path)
+function M.open(path)
   if not path or not workspaces.is_workspace(path) then
     notify.error('Cannot open non-existent workspace at "' .. path .. '".')
     return false
@@ -31,7 +31,7 @@ function module.open(path)
 end
 
 --- Close the currently open workspace, if open.
-function module.close()
+function M.close()
   if workspaces.is_open() then
     workspaces.close(os.time())
   end
@@ -40,27 +40,27 @@ end
 --- Create a new workspace at the given path
 --- If present, an already-extant workspace will be overwrittten.
 --- @param path string directory of workspace
-function module.init(path)
+function M.init(path)
   assert(type(path) == "string", "workspace path must be of type string")
   workspaces.init(path, os.time())
 end
 
 --- Get the directory of the currently open workspace
 --- @return string? path to directory of open workspace or `nil`
-function module.get_current_workspace()
+function M.get_current_workspace()
   return workspaces.get_root_dir()
 end
 
 --- Get history of recently-accessed workspaces
 --- @return record[] records containing workspace information
-function module.read_history()
+function M.read_history()
   return history.read_records()
 end
 
 --- Read metadata from a workspace
 --- @param rootdir string path to workspace directory or `nil` for current workspace
 --- @return workspace? metadata workspace info
-function module.read_metadata(rootdir)
+function M.read_metadata(rootdir)
   rootdir = rootdir or state.current_rootdir
   rootdir = paths.canonical(rootdir)
   return workspaces.read_metadata(rootdir)
@@ -69,7 +69,7 @@ end
 --- Write metadata for a workspace
 --- @param rootdir string path to workspace directory or `nil` for current workspace
 --- @param workspace workspace the metadata to write
-function module.write_metadata(rootdir, workspace)
+function M.write_metadata(rootdir, workspace)
   rootdir = rootdir or state.current_rootdir
   rootdir = paths.canonical(rootdir)
   workspaces.write_metadata(rootdir, workspace)
@@ -78,14 +78,14 @@ end
 --- Check if the directory contains a workspace
 --- @param path string directory to check
 --- @return boolean is_found if a workspace is found
-function module.is_workspace(path)
+function M.is_workspace(path)
   return type(path) == "string" and workspaces.is_workspace(path)
 end
 
 
 --- Prepare hookspace for use
 ---@param opts useropts options
-function module.setup(opts)
+function M.setup(opts)
   if opts.verbose ~= nil and type(opts.verbose) == "number" then
     state.verbose = opts.verbose
   end
@@ -97,7 +97,7 @@ function module.setup(opts)
   vim.api.nvim_create_user_command("HookspaceInit", function(tbl)
     if tbl and tbl.fargs then
       for _, rootdir in ipairs(tbl.fargs) do
-        module.init(rootdir)
+        M.init(rootdir)
       end
     end
   end, {
@@ -107,7 +107,7 @@ function module.setup(opts)
     complete = "file",
   })
   vim.api.nvim_create_user_command("HookspaceList", function(tbl)
-    local rootdirs = module.read_history()
+    local rootdirs = M.read_history()
     arrays.transform(rootdirs, function(o) return o.rootdir end)
     print(vim.inspect(rootdirs))
   end, {
@@ -119,7 +119,7 @@ function module.setup(opts)
     if tbl and tbl.fargs then
       for _, rootdir in ipairs(tbl.fargs) do
         if rootdir then
-          module.open(rootdir)
+          M.open(rootdir)
           break
         end
       end
@@ -131,7 +131,7 @@ function module.setup(opts)
     complete = "file",
   })
   vim.api.nvim_create_user_command("HookspaceClose", function(tbl)
-    module.close()
+    M.close()
   end, {
     desc = "close the currently open workspace",
     force = true,
@@ -174,10 +174,10 @@ function module.setup(opts)
   vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
     group = "hookspace",
     callback = function(tbl)
-      module.close()
+      M.close()
     end,
     desc = "automatically close hookspace when exiting app",
   })
 end
 
-return module
+return M

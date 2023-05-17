@@ -1,4 +1,4 @@
-local module = {}
+local M = {}
 
 local arrays = require("hookspace.luamisc.arrays")
 local files = require("hookspace.luamisc.files")
@@ -70,12 +70,12 @@ local function write_records(records)
 end
 
 ---@return record[] records workspace access records
-function module.read_records()
+function M.read_records()
   return _read_records()
 end
 
 ---@return string[] rootdirs workspace root dirs
-function module.read_root_dirs()
+function M.read_root_dirs()
   local records = _read_records()
   arrays.transform(records, function(r)
     return r.rootdir
@@ -84,7 +84,7 @@ function module.read_root_dirs()
 end
 
 ---@param rootdir string workspace root dir
-function module.delete(rootdir)
+function M.delete(rootdir)
   local records = _read_records()
   arrays.filter(records, function(r)
     return not is_record_has_path(r, rootdir)
@@ -94,7 +94,7 @@ end
 
 ---@param src string old workspace root dir
 ---@param dest string new workspace root dir
-function module.move(src, dest)
+function M.move(src, dest)
   local records = _read_records()
   arrays.filter(records, function(r)
     return is_record_has_path(r, src)
@@ -110,7 +110,7 @@ end
 
 ---@param rootdir string workspace root dir
 ---@param timestamp integer last access timestamp
-function module.update(rootdir, timestamp)
+function M.update(rootdir, timestamp)
   local records = _read_records()
 
   local is_found = false
@@ -130,4 +130,4 @@ function module.update(rootdir, timestamp)
   write_records(records)
 end
 
-return module
+return M

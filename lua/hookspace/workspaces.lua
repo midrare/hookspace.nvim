@@ -1,4 +1,4 @@
-local module = {}
+local M = {}
 
 local files = require('hookspace.luamisc.files')
 local paths = require('hookspace.luamisc.paths')
@@ -101,7 +101,7 @@ end
 
 ---@param rootdir string path to workspace root dir
 ---@param timestamp integer epoch sec to record as last access time
-function module.init(rootdir, timestamp)
+function M.init(rootdir, timestamp)
   assert(rootdir, 'expected rootdir')
   assert(timestamp, 'expected timestamp')
   rootdir = paths.canonical(rootdir)
@@ -125,7 +125,7 @@ end
 
 ---@param rootdir string path to root of workspace
 ---@param timestamp integer epoch sec to record as last access time
-function module.open(rootdir, timestamp)
+function M.open(rootdir, timestamp)
   assert(rootdir, 'expected root dir')
   assert(timestamp, 'expected timestamp')
   assert(not state.current_rootdir, 'another workspace is already open')
@@ -143,7 +143,7 @@ function module.open(rootdir, timestamp)
 end
 
 ---@param timestamp integer epoch sec to record as last access time
-function module.close(timestamp)
+function M.close(timestamp)
   assert(timestamp, 'expected timestamp')
   assert(state.current_rootdir, 'cannot close non-open workspace')
 
@@ -155,18 +155,18 @@ function module.close(timestamp)
 end
 
 ---@return boolean is_open if a workspace is currently open or not
-function module.is_open()
+function M.is_open()
   return state.current_rootdir ~= nil
 end
 
 ---@return string? dir root dir of currently open workspace
-function module.get_root_dir()
+function M.get_root_dir()
   return state.current_rootdir
 end
 
 ---@param rootdir? string workspace root dir
 ---@return string? datadir workspace data dir
-function module.get_data_dir(rootdir)
+function M.get_data_dir(rootdir)
   rootdir = rootdir or state.current_rootdir
   if not rootdir then
     return nil
@@ -176,7 +176,7 @@ end
 
 ---@param rootdir string path to root of workspace
 ---@return boolean is_workspace true if is root dir of a workspace
-function module.is_workspace(rootdir)
+function M.is_workspace(rootdir)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local workpaths = _workspace_paths(rootdir)
   return vim.fn.isdirectory(workpaths.datadir) == 1
@@ -184,7 +184,7 @@ end
 
 ---@param rootdir? string path to root of workspace
 ---@return workspace? workspace info
-function module.read_metadata(rootdir)
+function M.read_metadata(rootdir)
   rootdir = rootdir or state.current_rootdir
   if not rootdir then
     return nil
@@ -195,11 +195,11 @@ end
 
 ---@param rootdir? string path to root of workspace
 ---@param metadata workspace workspace info
-function module.write_metadata(rootdir, metadata)
+function M.write_metadata(rootdir, metadata)
   rootdir = rootdir or state.current_rootdir
   assert(rootdir, 'expected root dir or already-opened root dir')
   local workpaths = _workspace_paths(rootdir)
   files.write_json(workpaths.metafile, metadata)
 end
 
-return module
+return M

@@ -1,19 +1,19 @@
 -- TODO rename state module to useropts
-local module = {}
+local M = {}
 
 local path_sep = vim.fn.has('win32') > 0 and '\\' or '/'
 
-module.plugin_name = "hookspace"
-module.plugin_datadir = vim.fn.stdpath("data") .. path_sep .. "hookspace"
-module.data_dirname = ".hookspace"
-module.metadata_filename = "workspace.json"
+M.plugin_name = "hookspace"
+M.plugin_datadir = vim.fn.stdpath("data") .. path_sep .. "hookspace"
+M.data_dirname = ".hookspace"
+M.metadata_filename = "workspace.json"
 
-module.verbose = 1
+M.verbose = 1
 
-module.on_init = {}
-module.on_open = {}
-module.on_close = {}
+M.on_init = {}
+M.on_open = {}
+M.on_close = {}
 
-module.current_rootdir = nil
+M.current_rootdir = nil
 
-return module
+return M

@@ -1,8 +1,8 @@
+local M = {}
+
 local state = require("hookspace.state")
 
-local module = {}
-
-function module.error(msg, verbosity)
+function M.error(msg, verbosity)
   if verbosity == nil then
     verbosity = 1
   end
@@ -12,7 +12,7 @@ function module.error(msg, verbosity)
   end
 end
 
-function module.trace(msg, verbosity)
+function M.trace(msg, verbosity)
   if verbosity == nil then
     verbosity = 1
   end
@@ -22,7 +22,7 @@ function module.trace(msg, verbosity)
   end
 end
 
-function module.info(msg, verbosity)
+function M.info(msg, verbosity)
   if verbosity == nil then
     verbosity = 1
   end
@@ -32,7 +32,7 @@ function module.info(msg, verbosity)
   end
 end
 
-function module.debug(msg, verbosity)
+function M.debug(msg, verbosity)
   if verbosity == nil then
     verbosity = 1
   end
@@ -42,7 +42,7 @@ function module.debug(msg, verbosity)
   end
 end
 
-function module.warn(msg, verbosity)
+function M.warn(msg, verbosity)
   if verbosity == nil then
     verbosity = 1
   end
@@ -52,4 +52,4 @@ function module.warn(msg, verbosity)
   end
 end
 
-return module
+return M
