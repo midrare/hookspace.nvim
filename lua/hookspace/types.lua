@@ -3,6 +3,7 @@
 ---@class workspace
 ---@field datadir string where workspace-specific files are stored
 ---@field rootdir string root dir of workspace
+---@field userdir string where user-specific data files should be stored
 
 ---@alias hook fun(workspace: workspace): nil|boolean
 

@@ -1,3 +1,4 @@
+-- TODO rename state module to useropts
 local module = {}
 
 local path_sep = vim.fn.has('win32') > 0 and '\\' or '/'

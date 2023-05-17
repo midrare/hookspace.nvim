@@ -2,9 +2,64 @@ local module = {}
 
 local files = require('hookspace.luamisc.files')
 local paths = require('hookspace.luamisc.paths')
+local platform = require('hookspace.luamisc.platform')
+local sha2 = require('hookspace.luamisc.sha2')
 local history = require('hookspace.history')
 local notify = require('hookspace.notify')
 local state = require('hookspace.state')
+
+
+local function _str_strip(s)
+  return s:gsub("^%s+", ""):gsub("%s+$", "")
+end
+
+
+local function _random_string(len)
+  local chars = "abcdefghijklmnopqrstuvwxyz"
+    .. "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    .. "1234567890"
+  local result = ""
+  for _ = 1, len do
+    local ch_idx = math.random(1, #chars)
+    result = result .. chars:sub(ch_idx, 1)
+  end
+  return result
+end
+
+local function _get_machine_id()
+  local mach_id = platform.machine_id()
+  if mach_id then
+    return mach_id
+  end
+
+  local file = state.plugin_datadir .. paths.sep() .. "machine_id.txt"
+  mach_id = files.read_file(file)
+  mach_id = mach_id and _str_strip(mach_id) or nil
+  if mach_id then
+    return mach_id
+  end
+
+  mach_id = _random_string(32)
+  files.write_file(file, mach_id)
+
+  return mach_id
+end
+
+local function _userdir_name()
+  local mach_id = _get_machine_id()
+  local user_dir = tostring(sha2.sha3_512(mach_id)):gsub("[^a-zA-Z0-9]", "")
+  return user_dir .. ".user" -- suffix so gitignore can auto-detect
+end
+
+local function _workspace(rootdir)
+  return {
+    rootdir = rootdir,
+    datadir = rootdir .. paths.sep() .. state.data_dirname,
+    userdir = rootdir .. paths.sep() .. state.data_dirname .. paths.sep() .. _userdir_name(),
+    metafile = rootdir .. paths.sep() .. state.data_dirname .. paths.sep() .. state.metadata_filename,
+  }
+end
+
 
 ---@param hooks string|hook|hook[]
 ---@param workspace workspace
@@ -16,7 +71,7 @@ local function run_hooks(hooks, workspace)
       or type(hooks) == 'string',
     'hooks must be of type nil, table, function, or string'
   )
-  assert(type(workspace) == 'table', 'workspace metadata must be of type table')
+  assert(workspace, 'expected workspace')
 
   if type(hooks) == 'table' then
     for _, hook in ipairs(hooks) do
@@ -50,33 +105,20 @@ local function init_workspace(rootdir, timestamp)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
 
-  local datadir = rootdir .. paths.sep() .. state.data_dirname
-  local metafile = datadir .. paths.sep() .. state.metadata_filename
-
-  vim.fn.mkdir(datadir, 'p')
-  if vim.fn.isdirectory(datadir) == 0 then
-    notify.error('failed to create workspace data directory "' .. datadir .. '"')
-    return
-  end
-
-  files.write_json(metafile, {
-    name = paths.basename(paths.normpath(rootdir)),
+  local workspace = _workspace(rootdir)
+  local metadata = {
+    name = paths.basename(paths.normpath(rootdir)) or "Unnamed",
     created = timestamp,
-  })
-  if vim.fn.filereadable(metafile) == 0 then
-    notify.error('failed to write workspace metadata file "' .. metafile .. '"')
-    return
-  end
+  }
 
-  files.write_file(datadir .. paths.sep() .. '.notags')
-  files.write_file(datadir .. paths.sep() .. '.ignore', '*')
-  files.write_file(datadir .. paths.sep() .. '.gitignore',
-    'session\n'
-    .. 'Session.vim\n'
-    .. 'PreSession.vim\n'
-    .. 'trailblazer\n')
+  files.write_json(workspace.metafile, metadata)
+  files.write_file(workspace.datadir .. paths.sep() .. '.notags')
+  files.write_file(workspace.datadir .. paths.sep() .. '.ignore', '*')
+  files.write_file(workspace.datadir .. paths.sep() .. '.tokeignore', '*')
+  files.write_file(workspace.datadir .. paths.sep() .. '.gitignore',
+    table.concat({"*.user", "Session.vim", "PreSession.vim"}, "\n"))
 
-  run_hooks(state.on_init, { rootdir = rootdir, datadir = datadir })
+  run_hooks(state.on_init, workspace)
   history.update(rootdir, timestamp)
 end
 
@@ -106,23 +148,15 @@ end
 local function open_workspace(rootdir, timestamp)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
-  assert(
-    not state.current_rootdir,
-    'cannot open workspace when one is already open'
-  )
+  assert(not state.current_rootdir, 'another workspace is already open')
 
-  local datadir = rootdir .. paths.sep() .. state.data_dirname
-  local metafile = datadir .. paths.sep() .. state.metadata_filename
-
-  if vim.fn.isdirectory(datadir) == 0 then
-    error('failed to open non-existent workspace "' .. datadir .. '"')
+  local workspace = _workspace(rootdir)
+  if vim.fn.isdirectory(workspace.datadir) <= 0 then
+    notify.error('failed to open non-existent workspace "' .. workspace.datadir .. '"')
     return
   end
 
-  run_hooks(state.on_open, {
-    rootdir = rootdir,
-    datadir = datadir,
-  })
+  run_hooks(state.on_open, workspace)
   state.current_rootdir = rootdir
   history.update(rootdir, timestamp)
 end
@@ -130,20 +164,11 @@ end
 ---@param timestamp integer
 local function close_workspace(timestamp)
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
-  assert(
-    state.current_rootdir,
-    'cannot close workspace when one is not already open'
-  )
+  assert(state.current_rootdir, 'cannot close non-open workspace')
 
-  local datadir = state.current_rootdir
-    .. paths.sep()
-    .. state.data_dirname
-  local metafile = datadir .. paths.sep() .. state.metadata_filename
+  local workspace = _workspace(state.current_rootdir)
 
-  run_hooks(state.on_close, {
-    rootdir = state.current_rootdir,
-    datadir = datadir,
-  })
+  run_hooks(state.on_close, workspace)
   history.update(state.current_rootdir, timestamp)
   state.current_rootdir = nil
 end
