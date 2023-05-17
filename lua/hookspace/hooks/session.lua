@@ -69,20 +69,20 @@ function M.setup(opts)
 end
 
 function M.on_open(workspace)
-  local session = workspace.datadir .. path_sep .. "Session.vim"
-  local original = vim.fn.stdpath("data") .. path_sep .. "PreSession.vim"
+  local session = workspace.userdir .. path_sep .. "Session.vim"
+  local before = workspace.userdir .. path_sep .. "Before.vim"
 
-  vim.fn.delete(original)
-  write_session(original)
+  vim.fn.delete(before)
+  write_session(before)
 
   vim.cmd("silent! %bdelete!")
   vim.cmd("silent! tabonly!")
   vim.cmd("silent! only!")
   vim.cmd("silent! enew!")
 
-  if vim.fn.filereadable(session) == 1 then
+  if vim.fn.filereadable(session) >= 1 then
     ---@diagnostic disable-next-line: param-type-mismatch
-    pcall(vim.cmd, "source " .. vim.fn.fnameescape(session))
+    pcall(vim.cmd, "silent! source " .. vim.fn.fnameescape(session))
 
     -- close buffers with non-existant files
     ---@diagnostic disable-next-line: param-type-mismatch
@@ -98,8 +98,8 @@ function M.on_open(workspace)
 end
 
 function M.on_close(workspace)
-  local session = workspace.datadir .. path_sep .. "Session.vim"
-  local original = vim.fn.stdpath("data") .. path_sep .. "PreSession.vim"
+  local session = workspace.userdir .. path_sep .. "Session.vim"
+  local before = workspace.userdir .. path_sep .. "Before.vim"
 
   write_session(session)
 
@@ -118,10 +118,10 @@ function M.on_close(workspace)
     vim.cmd("silent! Startup display")
   end
 
-  if vim.fn.filereadable(original) == 1 then
+  if vim.fn.filereadable(before) >= 1 then
     ---@diagnostic disable-next-line: param-type-mismatch
-    pcall(vim.cmd, "source " .. vim.fn.fnameescape(original))
-    vim.fn.delete(original)
+    pcall(vim.cmd, "silent! source " .. vim.fn.fnameescape(before))
+    vim.fn.delete(before)
   end
 end
 
