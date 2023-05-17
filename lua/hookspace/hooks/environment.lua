@@ -1,4 +1,4 @@
-local module = {}
+local M = {}
 
 local default_opts = { filename = "env.json" }
 local user_opts = vim.deepcopy(default_opts)
@@ -25,11 +25,11 @@ local function is_var_name_sane(varname)
   return string.match(varname, "^[a-zA-Z0-9_\\-]*$")
 end
 
-function module.setup(opts)
+function M.setup(opts)
   user_opts = vim.tbl_deep_extend("force", default_opts, opts)
 end
 
-function module.on_open(workspace)
+function M.on_open(workspace)
   old_env_names = {}
   old_env_values = {}
 
@@ -62,7 +62,7 @@ function module.on_open(workspace)
 end
 
 ---@diagnostic disable-next-line: unused-local
-function module.on_close(workspace)
+function M.on_close(workspace)
   if old_env_names then
     for _, name in ipairs(old_env_names) do
       if is_var_name_sane(name) then
@@ -85,4 +85,4 @@ function module.on_close(workspace)
   end
 end
 
-return module
+return M

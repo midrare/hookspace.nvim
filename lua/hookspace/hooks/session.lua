@@ -1,5 +1,5 @@
 local modulename, _ = ...
-local module = {}
+local M = {}
 
 local default_opts = {}
 ---@diagnostic disable-next-line: unused-local
@@ -63,12 +63,12 @@ local function close_buffer(bufnr)
   end
 end
 
-function module.setup(opts)
+function M.setup(opts)
   ---@diagnostic disable-next-line: unused-local
   user_opts = vim.tbl_deep_extend("force", default_opts, opts)
 end
 
-function module.on_open(workspace)
+function M.on_open(workspace)
   local session = workspace.datadir .. path_sep .. "Session.vim"
   local original = vim.fn.stdpath("data") .. path_sep .. "PreSession.vim"
 
@@ -97,7 +97,7 @@ function module.on_open(workspace)
   end
 end
 
-function module.on_close(workspace)
+function M.on_close(workspace)
   local session = workspace.datadir .. path_sep .. "Session.vim"
   local original = vim.fn.stdpath("data") .. path_sep .. "PreSession.vim"
 
@@ -125,4 +125,4 @@ function module.on_close(workspace)
   end
 end
 
-return module
+return M
