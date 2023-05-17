@@ -1,10 +1,8 @@
-local module, _ = {}, nil
-module.name, _ = ...
+local module = {}
 
-local moduleroot = module.name:gsub("(.+)%..+", "%1")
-local arrays = require(moduleroot .. ".luamisc.arrays")
-local files = require(moduleroot .. ".luamisc.files")
-local paths = require(moduleroot .. ".luamisc.paths")
+local arrays = require("hookspace.luamisc.arrays")
+local files = require("hookspace.luamisc.files")
+local paths = require("hookspace.luamisc.paths")
 
 local records_path = vim.fn.stdpath("data")
   .. paths.sep()

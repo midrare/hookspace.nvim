@@ -1,7 +1,4 @@
-local modulename, _ = ...
-local moduleroot = modulename:gsub("(.+)%..+", "%1")
-
-local state = require(moduleroot .. ".state")
+local state = require("hookspace.state")
 
 local module = {}
 

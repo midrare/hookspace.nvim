@@ -1,13 +1,10 @@
-local modulename, _ = ...
-local moduleroot = modulename:gsub('(.+)%..+', '%1')
-
-local files = require(moduleroot .. '.luamisc.files')
-local paths = require(moduleroot .. '.luamisc.paths')
-local history = require(moduleroot .. '.history')
-local notify = require(moduleroot .. '.notify')
-local state = require(moduleroot .. '.state')
-
 local module = {}
+
+local files = require('hookspace.luamisc.files')
+local paths = require('hookspace.luamisc.paths')
+local history = require('hookspace.history')
+local notify = require('hookspace.notify')
+local state = require('hookspace.state')
 
 ---@param hooks string|hook|hook[]
 ---@param workspace workspace

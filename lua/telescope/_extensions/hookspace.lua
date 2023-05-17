@@ -1,7 +1,3 @@
-local modulename, _ = ...
----@diagnostic disable-next-line: unused-local
-local moduleroot = modulename:gsub("(.+)%..+", "%1")
-
 local hookspace = require("hookspace")
 local state = require("hookspace.state")
 local workspaces = require("hookspace.workspaces")

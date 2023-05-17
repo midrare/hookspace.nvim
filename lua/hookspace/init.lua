@@ -1,14 +1,13 @@
 local module = {}
-module.name, _ = ...
 
 local os = require("os")
-local arrays = require(module.name .. '.luamisc.arrays')
-local paths = require(module.name .. '.luamisc.paths')
-local tables = require(module.name .. '.luamisc.tables')
-local history = require(module.name .. ".history")
-local state = require(module.name .. ".state")
-local notify = require(module.name .. ".notify")
-local workspaces = require(module.name .. ".workspaces")
+local arrays = require('hookspace.luamisc.arrays')
+local paths = require('hookspace.luamisc.paths')
+local tables = require('hookspace.luamisc.tables')
+local history = require("hookspace.history")
+local state = require("hookspace.state")
+local notify = require("hookspace.notify")
+local workspaces = require("hookspace.workspaces")
 
 
 --- Check if a workspace is currently open
