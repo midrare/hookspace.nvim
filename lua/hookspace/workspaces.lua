@@ -48,7 +48,7 @@ end
 
 local function _userdir_name()
   local mach_id = _get_machine_id()
-  local user_dir = tostring(sha2.sha3_512(mach_id)):gsub("[^a-zA-Z0-9]", "")
+  local user_dir = tostring(sha2.md5(mach_id)):gsub("[^a-zA-Z0-9]", "")
   return user_dir .. ".user" -- suffix so gitignore can auto-detect
 end
 
