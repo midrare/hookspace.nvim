@@ -42,7 +42,7 @@ end
 --- Create a new workspace at the given path
 --- If present, an already-extant workspace will be overwrittten.
 --- @param path string directory of workspace
---- @param user_data? HookspaceUserData initial value of user data (optional)
+--- @param user_data? userdata initial value of user data (optional)
 function module.init(path, user_data)
   assert(type(path) == "string", "workspace path must be of type string")
   user_data = user_data or {}
@@ -64,7 +64,7 @@ function module.get_current_workspace()
 end
 
 --- Get history of recently-accessed workspaces
---- @return HookspaceRecord[] records containing workspace information
+--- @return record[] records containing workspace information
 function module.read_history()
   local results = history.read_records()
   -- arrays.filter(results, function(r)
@@ -81,7 +81,7 @@ end
 
 --- Read metadata from a workspace
 --- @param rootdir string path to workspace directory or `nil` for current workspace
---- @return HookspaceWorkspace metadata workspace info
+--- @return workspace metadata workspace info
 function module.read_metadata(rootdir)
   if not rootdir and not state.current_rootdir then
     notify.error(
@@ -102,7 +102,7 @@ end
 
 --- Write metadata for a workspace
 --- @param rootdir string path to workspace directory or `nil` for current workspace
---- @param workspace HookspaceWorkspace the metadata to write
+--- @param workspace workspace the metadata to write
 function module.write_metadata(rootdir, workspace)
   if not rootdir and not state.current_rootdir then
     notify.error(
@@ -123,7 +123,7 @@ end
 
 --- Read user data a workspace
 --- @param rootdir? string path to workspace directory or `nil` for current workspace
---- @return HookspaceUserData userdata user data of the workspace
+--- @return userdata userdata user data of the workspace
 function module.read_user_data(rootdir)
   if not rootdir and not state.current_rootdir then
     notify.error(
@@ -144,7 +144,7 @@ end
 
 --- Write user data for a workspace
 --- @param rootdir? string path to workspace directory or `nil` for current workspace
---- @param userdata HookspaceUserData the user data to write
+--- @param userdata userdata the user data to write
 function module.write_user_data(rootdir, userdata)
   if not rootdir and not state.current_rootdir then
     notify.error(
@@ -195,7 +195,7 @@ local function _history_complete(arg_lead, cmd_line, cursor_pos)
 end
 
 --- Prepare hookspace for use
----@param opts HookspaceOptions options
+---@param opts useropts options
 function module.setup(opts)
   if opts.verbose ~= nil and type(opts.verbose) == "number" then
     state.verbose = opts.verbose

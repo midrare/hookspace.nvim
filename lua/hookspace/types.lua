@@ -1,19 +1,19 @@
 ---@meta _
 
----@class HookspaceWorkspace
+---@class workspace
 ---@field datadir string where workspace-specific files are stored
 ---@field rootdir string root dir of workspace
 
----@alias HookspaceHook function(HookspaceWorkspace, HookspaceUserdata): nil|boolean
----@alias HookspaceUserData table<string|number, any>
+---@alias hook function(workspace, userdata): nil|boolean
+---@alias userdata table<string|number, any>
 
----@class HookspaceOptions
+---@class useropts
 ---@field verbose integer from 0..
----@field on_init nil|HookspaceHook|HookspaceHook[]
----@field on_open nil|HookspaceHook|HookspaceHook[]
----@field on_close nil|HookspaceHook|HookspaceHook[]
+---@field on_init nil|hook|hook[]
+---@field on_open nil|hook|hook[]
+---@field on_close nil|hook|hook[]
 
----@class HookspaceRecord
+---@class record
 ---@field name string workspace display name
 ---@field last_accessed integer timestamp of last access
 ---@field rootdir string path to workspace root dir

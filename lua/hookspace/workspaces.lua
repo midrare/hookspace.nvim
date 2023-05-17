@@ -9,9 +9,9 @@ local state = require(moduleroot .. '.state')
 
 local module = {}
 
----@param hooks string|HookspaceHook|HookspaceHook[]
----@param workspace HookspaceWorkspace
----@param userdata HookspaceUserData
+---@param hooks string|hook|hook[]
+---@param workspace workspace
+---@param userdata userdata
 local function run_hooks(hooks, workspace, userdata)
   assert(
     hooks == nil
@@ -50,7 +50,7 @@ local function run_hooks(hooks, workspace, userdata)
 end
 
 ---@param rootdir string
----@param userdata HookspaceUserData
+---@param userdata userdata
 ---@param timestamp integer
 local function init_workspace(rootdir, userdata, timestamp)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
@@ -186,7 +186,7 @@ local function close_workspace(timestamp)
 end
 
 ---@param rootdir string path to workspace root dir
----@param user_data? HookspaceUserData initial user data
+---@param user_data? userdata initial user data
 ---@param timestamp integer epoch sec to record as last access time
 function module.init(rootdir, user_data, timestamp)
   assert(type(rootdir) == 'string', 'type of workspace path must be string')
@@ -254,7 +254,7 @@ function module.is_workspace(rootdir)
 end
 
 ---@param rootdir string path to root of workspace
----@return HookspaceWorkspace? workspace info
+---@return workspace? workspace info
 function module.read_metadata(rootdir)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir
@@ -266,7 +266,7 @@ function module.read_metadata(rootdir)
 end
 
 ---@param rootdir string path to root of workspace
----@param metadata HookspaceWorkspace workspace info
+---@param metadata workspace workspace info
 function module.write_metadata(rootdir, metadata)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir
@@ -278,7 +278,7 @@ function module.write_metadata(rootdir, metadata)
 end
 
 ---@param rootdir string workspace root dir path
----@return HookspaceUserData userdata user data
+---@return userdata userdata user data
 function module.read_user_data(rootdir)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir
@@ -290,7 +290,7 @@ function module.read_user_data(rootdir)
 end
 
 ---@param rootdir string workspace root dir path
----@param user_data HookspaceUserData user data
+---@param user_data userdata user data
 function module.write_user_data(rootdir, user_data)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir

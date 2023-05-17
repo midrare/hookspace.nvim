@@ -70,7 +70,7 @@ local function write_records(records)
   files.write_json(records_path, records)
 end
 
----@return HookspaceRecord[] records workspace access records
+---@return record[] records workspace access records
 function module.read_records()
   return _read_records()
 end
