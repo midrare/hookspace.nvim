@@ -1,14 +1,15 @@
 local M = {}
 
-local state = require("hookspace.state")
+local consts = require("hookspace.consts")
+local useropts = require("hookspace.useropts")
 
 function M.error(msg, verbosity)
   if verbosity == nil then
     verbosity = 1
   end
 
-  if state.verbose >= verbosity then
-    vim.notify(msg, vim.log.levels.ERROR, { title = state.plugin_name })
+  if useropts.verbose >= verbosity then
+    vim.notify(msg, vim.log.levels.ERROR, { title = consts.plugin })
   end
 end
 
@@ -17,8 +18,8 @@ function M.trace(msg, verbosity)
     verbosity = 1
   end
 
-  if state.verbose >= verbosity then
-    vim.notify(msg, vim.log.levels.TRACE, { title = state.plugin_name })
+  if useropts.verbose >= verbosity then
+    vim.notify(msg, vim.log.levels.TRACE, { title = consts.plugin })
   end
 end
 
@@ -27,8 +28,8 @@ function M.info(msg, verbosity)
     verbosity = 1
   end
 
-  if state.verbose >= verbosity then
-    vim.notify(msg, vim.log.levels.INFO, { title = state.plugin_name })
+  if useropts.verbose >= verbosity then
+    vim.notify(msg, vim.log.levels.INFO, { title = consts.plugin })
   end
 end
 
@@ -37,8 +38,8 @@ function M.debug(msg, verbosity)
     verbosity = 1
   end
 
-  if state.verbose >= verbosity then
-    vim.notify(msg, vim.log.levels.DEBUG, { title = state.plugin_name })
+  if useropts.verbose >= verbosity then
+    vim.notify(msg, vim.log.levels.DEBUG, { title = consts.plugin })
   end
 end
 
@@ -47,8 +48,8 @@ function M.warn(msg, verbosity)
     verbosity = 1
   end
 
-  if state.verbose >= verbosity then
-    vim.notify(msg, vim.log.levels.WARN, { title = state.plugin_name })
+  if useropts.verbose >= verbosity then
+    vim.notify(msg, vim.log.levels.WARN, { title = consts.plugin })
   end
 end
 

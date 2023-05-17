@@ -100,7 +100,7 @@ function M.move(src, dest)
     return is_record_has_path(r, src)
   end)
 
-  local canonical = paths.normpath(paths.normcase(dest))
+  local canonical = paths.canonical(dest)
   arrays.apply(records, function(r)
     r.rootdir = canonical
   end)

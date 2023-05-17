@@ -6,8 +6,10 @@ local platform = require('hookspace.luamisc.platform')
 local sha2 = require('hookspace.luamisc.sha2')
 local history = require('hookspace.history')
 local notify = require('hookspace.notify')
-local state = require('hookspace.state')
+local consts = require('hookspace.consts')
+local useropts = require('hookspace.useropts')
 
+local current_rootdir = nil
 
 local function _str_strip(s)
   return s:gsub("^%s+", ""):gsub("%s+$", "")
@@ -32,7 +34,7 @@ local function _get_machine_id()
     return mach_id
   end
 
-  local file = state.plugin_datadir .. paths.sep() .. "machine_id.txt"
+  local file = consts.plugindir .. paths.sep() .. "machine_id.txt"
   mach_id = files.read_file(file)
   mach_id = mach_id and _str_strip(mach_id) or nil
   if mach_id then
@@ -54,9 +56,9 @@ end
 local function _workspace_paths(rootdir)
   return {
     rootdir = rootdir,
-    datadir = rootdir .. paths.sep() .. state.data_dirname,
-    userdir = rootdir .. paths.sep() .. state.data_dirname .. paths.sep() .. _userdir_name(),
-    metafile = rootdir .. paths.sep() .. state.data_dirname .. paths.sep() .. state.metadata_filename,
+    datadir = rootdir .. paths.sep() .. consts.data_dirname,
+    userdir = rootdir .. paths.sep() .. consts.data_dirname .. paths.sep() .. _userdir_name(),
+    metafile = rootdir .. paths.sep() .. consts.data_dirname .. paths.sep() .. consts.metadata_filename,
   }
 end
 
@@ -119,7 +121,7 @@ function M.init(rootdir, timestamp)
   files.write_file(workpaths.datadir .. paths.sep() .. '.gitignore',
     table.concat({"*.user", "Session.vim", "PreSession.vim"}, "\n"))
 
-  run_hooks(state.on_init, workpaths)
+  run_hooks(useropts.on_init, workpaths)
   history.update(rootdir, timestamp)
 end
 
@@ -128,7 +130,7 @@ end
 function M.open(rootdir, timestamp)
   assert(rootdir, 'expected root dir')
   assert(timestamp, 'expected timestamp')
-  assert(not state.current_rootdir, 'another workspace is already open')
+  assert(not current_rootdir, 'another workspace is already open')
 
   rootdir = paths.canonical(rootdir)
   local workpaths = _workspace_paths(rootdir)
@@ -137,37 +139,37 @@ function M.open(rootdir, timestamp)
     return
   end
 
-  run_hooks(state.on_open, workpaths)
-  state.current_rootdir = rootdir
+  run_hooks(useropts.on_open, workpaths)
+  current_rootdir = rootdir
   history.update(rootdir, timestamp)
 end
 
 ---@param timestamp integer epoch sec to record as last access time
 function M.close(timestamp)
   assert(timestamp, 'expected timestamp')
-  assert(state.current_rootdir, 'cannot close non-open workspace')
+  assert(current_rootdir, 'cannot close non-open workspace')
 
-  local workpaths = _workspace_paths(state.current_rootdir)
+  local workpaths = _workspace_paths(current_rootdir)
 
-  run_hooks(state.on_close, workpaths)
-  history.update(state.current_rootdir, timestamp)
-  state.current_rootdir = nil
+  run_hooks(useropts.on_close, workpaths)
+  history.update(current_rootdir, timestamp)
+  current_rootdir = nil
 end
 
 ---@return boolean is_open if a workspace is currently open or not
 function M.is_open()
-  return state.current_rootdir ~= nil
+  return current_rootdir ~= nil
 end
 
 ---@return string? dir root dir of currently open workspace
 function M.get_root_dir()
-  return state.current_rootdir
+  return current_rootdir
 end
 
 ---@param rootdir? string workspace root dir
 ---@return string? datadir workspace data dir
 function M.get_data_dir(rootdir)
-  rootdir = rootdir or state.current_rootdir
+  rootdir = rootdir or current_rootdir
   if not rootdir then
     return nil
   end
@@ -185,7 +187,7 @@ end
 ---@param rootdir? string path to root of workspace
 ---@return workspace? workspace info
 function M.read_metadata(rootdir)
-  rootdir = rootdir or state.current_rootdir
+  rootdir = rootdir or current_rootdir
   if not rootdir then
     return nil
   end
@@ -196,7 +198,7 @@ end
 ---@param rootdir? string path to root of workspace
 ---@param metadata workspace workspace info
 function M.write_metadata(rootdir, metadata)
-  rootdir = rootdir or state.current_rootdir
+  rootdir = rootdir or current_rootdir
   assert(rootdir, 'expected root dir or already-opened root dir')
   local workpaths = _workspace_paths(rootdir)
   files.write_json(workpaths.metafile, metadata)

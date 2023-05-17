@@ -1,5 +1,6 @@
 local hookspace = require("hookspace")
-local state = require("hookspace.state")
+local consts = require("hookspace.consts")
+local useropts = require("hookspace.useropts")
 local workspaces = require("hookspace.workspaces")
 
 local actions = require("telescope.actions")
@@ -57,7 +58,7 @@ end
 local function open_picker(opts)
   pickers
     .new(opts, {
-      prompt_title = opts.title or state.plugin_name,
+      prompt_title = opts.title or consts.plugin,
       finder = finders.new_table({
         results = hookspace.read_history(),
         entry_maker = to_entry,

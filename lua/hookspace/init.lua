@@ -4,7 +4,7 @@ local os = require("os")
 local arrays = require('hookspace.luamisc.arrays')
 local paths = require('hookspace.luamisc.paths')
 local history = require("hookspace.history")
-local state = require("hookspace.state")
+local useropts = require("hookspace.useropts")
 local notify = require("hookspace.notify")
 local workspaces = require("hookspace.workspaces")
 
@@ -61,8 +61,7 @@ end
 --- @param rootdir string path to workspace directory or `nil` for current workspace
 --- @return workspace? metadata workspace info
 function M.read_metadata(rootdir)
-  rootdir = rootdir or state.current_rootdir
-  rootdir = paths.canonical(rootdir)
+  rootdir = rootdir and paths.canonical(rootdir) or nil
   return workspaces.read_metadata(rootdir)
 end
 
@@ -70,8 +69,7 @@ end
 --- @param rootdir string path to workspace directory or `nil` for current workspace
 --- @param workspace workspace the metadata to write
 function M.write_metadata(rootdir, workspace)
-  rootdir = rootdir or state.current_rootdir
-  rootdir = paths.canonical(rootdir)
+  rootdir = rootdir and paths.canonical(rootdir) or nil
   workspaces.write_metadata(rootdir, workspace)
 end
 
@@ -87,12 +85,12 @@ end
 ---@param opts useropts options
 function M.setup(opts)
   if opts.verbose ~= nil and type(opts.verbose) == "number" then
-    state.verbose = opts.verbose
+    useropts.verbose = opts.verbose
   end
 
-  state.on_init = opts.on_init or state.on_init
-  state.on_open = opts.on_open or state.on_open
-  state.on_close = opts.on_close or state.on_close
+  useropts.on_init = opts.on_init or useropts.on_init
+  useropts.on_open = opts.on_open or useropts.on_open
+  useropts.on_close = opts.on_close or useropts.on_close
 
   vim.api.nvim_create_user_command("HookspaceInit", function(tbl)
     if tbl and tbl.fargs then
