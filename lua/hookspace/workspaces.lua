@@ -51,7 +51,7 @@ local function _userdir_name()
   return user_dir .. ".user" -- suffix so gitignore can auto-detect
 end
 
-local function _workspace(rootdir)
+local function _workspace_dirs(rootdir)
   return {
     rootdir = rootdir,
     datadir = rootdir .. paths.sep() .. state.data_dirname,
@@ -105,7 +105,7 @@ local function init_workspace(rootdir, timestamp)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
 
-  local workspace = _workspace(rootdir)
+  local workspace = _workspace_dirs(rootdir)
   local metadata = {
     name = paths.basename(paths.normpath(rootdir)) or "Unnamed",
     created = timestamp,
@@ -150,7 +150,7 @@ local function open_workspace(rootdir, timestamp)
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
   assert(not state.current_rootdir, 'another workspace is already open')
 
-  local workspace = _workspace(rootdir)
+  local workspace = _workspace_dirs(rootdir)
   if vim.fn.isdirectory(workspace.datadir) <= 0 then
     notify.error('failed to open non-existent workspace "' .. workspace.datadir .. '"')
     return
@@ -166,7 +166,7 @@ local function close_workspace(timestamp)
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
   assert(state.current_rootdir, 'cannot close non-open workspace')
 
-  local workspace = _workspace(state.current_rootdir)
+  local workspace = _workspace_dirs(state.current_rootdir)
 
   run_hooks(state.on_close, workspace)
   history.update(state.current_rootdir, timestamp)
