@@ -1,5 +1,6 @@
 local M = {}
 
+local arrays = require("hookspace.luamisc.arrays")
 local files = require("hookspace.luamisc.files")
 local paths = require("hookspace.luamisc.paths")
 local platform = require("hookspace.luamisc.platform")
@@ -10,6 +11,21 @@ local consts = require("hookspace.consts")
 local useropts = require("hookspace.useropts")
 
 local current_rootdir = nil
+
+local function _to_lines(s)
+  local lines = {}
+
+  while s and #s > 0 do
+    local eol, _ = s:find("\n", 1, true)
+    local line = eol and s:sub(1, eol)
+    s = eol and s:sub(eol + 1) or ""
+
+    line = line:gsub("[%s\r\n]+$", "")
+    table.insert(lines, line)
+  end
+
+  return lines
+end
 
 local function _str_strip(s)
   return s:gsub("^%s+", ""):gsub("%s+$", "")
@@ -107,6 +123,16 @@ local function run_hooks(hooks, workspace)
   end
 end
 
+local function update_ignorefile(ignorefile, lines)
+  local data = files.read_file(ignorefile) or nil
+  local lines_ = data and _to_lines(data) or {}
+
+  arrays.extend(lines_, lines)
+  arrays.uniqify(lines_)
+
+  files.write_file(ignorefile, table.concat(lines_, "\n"))
+end
+
 ---@param rootdir string path to workspace root dir
 ---@param timestamp integer epoch sec to record as last access time
 function M.init(rootdir, timestamp)
@@ -115,18 +141,21 @@ function M.init(rootdir, timestamp)
   rootdir = paths.canonical(rootdir)
 
   local workpaths = _workspace_paths(rootdir)
-  local metadata = {
-    name = paths.basename(paths.normpath(rootdir)) or "Unnamed",
-    created = timestamp,
-  }
+
+  local metadata = M.read_metadata(rootdir) or {}
+  metadata.name = metadata.name
+    or paths.basename(paths.normpath(rootdir))
+    or "Unnamed"
+  metadata.created = metadata.created or timestamp
 
   files.write_json(workpaths.metafile, metadata)
   files.write_file(workpaths.datadir .. paths.sep() .. ".notags")
   files.write_file(workpaths.datadir .. paths.sep() .. ".ignore", "*")
   files.write_file(workpaths.datadir .. paths.sep() .. ".tokeignore", "*")
-  files.write_file(
+
+  update_ignorefile(
     workpaths.datadir .. paths.sep() .. ".gitignore",
-    table.concat({ "*.user", "Session.vim", "PreSession.vim" }, "\n")
+    { "/*.user", "/Session.vim", "/Before.vim" }
   )
 
   files.makedirs(workpaths.datadir)
