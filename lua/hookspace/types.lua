@@ -4,8 +4,7 @@
 ---@field datadir string where workspace-specific files are stored
 ---@field rootdir string root dir of workspace
 
----@alias hook function(workspace, userdata): nil|boolean
----@alias userdata table<string|number, any>
+---@alias hook fun(workspace: workspace): nil|boolean
 
 ---@class useropts
 ---@field verbose integer from 0..

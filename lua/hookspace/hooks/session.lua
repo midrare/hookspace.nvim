@@ -2,7 +2,8 @@ local modulename, _ = ...
 local module = {}
 
 local default_opts = {}
-local user_opts = vim.tbl_deep_extend("force", {}, default_opts)
+---@diagnostic disable-next-line: unused-local
+local user_opts = vim.deepcopy(default_opts)
 
 local _ = nil
 local bufdel = {}
@@ -63,10 +64,11 @@ local function close_buffer(bufnr)
 end
 
 function module.setup(opts)
+  ---@diagnostic disable-next-line: unused-local
   user_opts = vim.tbl_deep_extend("force", default_opts, opts)
 end
 
-function module.on_open(workspace, user_data)
+function module.on_open(workspace)
   local session = workspace.datadir .. path_sep .. 'Session.vim'
   local original = vim.fn.stdpath('data') .. path_sep .. 'PreSession.vim'
 
@@ -95,7 +97,7 @@ function module.on_open(workspace, user_data)
   end
 end
 
-function module.on_close(workspace, user_data)
+function module.on_close(workspace)
   local session = workspace.datadir .. path_sep .. 'Session.vim'
   local original = vim.fn.stdpath('data') .. path_sep .. 'PreSession.vim'
 

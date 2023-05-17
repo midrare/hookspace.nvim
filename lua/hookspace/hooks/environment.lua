@@ -1,7 +1,7 @@
 local module = {}
 
 local default_opts = { filename = 'env.json' }
-local user_opts = vim.tbl_deep_extend("force", {}, default_opts)
+local user_opts = vim.deepcopy(default_opts)
 
 local old_env_names = nil
 local old_env_values = nil
@@ -29,7 +29,7 @@ function module.setup(opts)
   user_opts = vim.tbl_deep_extend("force", default_opts, opts)
 end
 
-function module.on_open(workspace, user_data)
+function module.on_open(workspace)
   old_env_names = {}
   old_env_values = {}
 
@@ -60,7 +60,8 @@ function module.on_open(workspace, user_data)
   vim.api.nvim_set_current_dir(workspace.rootdir)
 end
 
-function module.on_close(workspace, user_data)
+---@diagnostic disable-next-line: unused-local
+function module.on_close(workspace)
   if old_env_names then
     for _, name in ipairs(old_env_names) do
       if is_var_name_sane(name) then

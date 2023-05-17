@@ -8,8 +8,7 @@ local state = require('hookspace.state')
 
 ---@param hooks string|hook|hook[]
 ---@param workspace workspace
----@param userdata userdata
-local function run_hooks(hooks, workspace, userdata)
+local function run_hooks(hooks, workspace)
   assert(
     hooks == nil
       or type(hooks) == 'table'
@@ -18,14 +17,13 @@ local function run_hooks(hooks, workspace, userdata)
     'hooks must be of type nil, table, function, or string'
   )
   assert(type(workspace) == 'table', 'workspace metadata must be of type table')
-  assert(type(userdata) == 'table', 'user data must be of type table')
 
   if type(hooks) == 'table' then
     for _, hook in ipairs(hooks) do
-      run_hooks(hook, workspace, userdata)
+      run_hooks(hook, workspace)
     end
   elseif type(hooks) == 'function' then
-    local status_ok, error_msg = pcall(hooks, workspace, userdata)
+    local status_ok, error_msg = pcall(hooks, workspace)
     if not status_ok then
       notify.error('Failed to run hook "' .. vim.inspect(hooks) .. '"')
       if error_msg then
@@ -47,20 +45,17 @@ local function run_hooks(hooks, workspace, userdata)
 end
 
 ---@param rootdir string
----@param userdata userdata
 ---@param timestamp integer
-local function init_workspace(rootdir, userdata, timestamp)
+local function init_workspace(rootdir, timestamp)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
-  assert(type(userdata) == 'table', 'user data must be of type table')
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
 
   local datadir = rootdir .. paths.sep() .. state.data_dirname
   local metafile = datadir .. paths.sep() .. state.metadata_filename
-  local userdatafile = datadir .. paths.sep() .. state.user_data_filename
 
   vim.fn.mkdir(datadir, 'p')
   if vim.fn.isdirectory(datadir) == 0 then
-    error('failed to create workspace data directory "' .. datadir .. '"')
+    notify.error('failed to create workspace data directory "' .. datadir .. '"')
     return
   end
 
@@ -69,13 +64,7 @@ local function init_workspace(rootdir, userdata, timestamp)
     created = timestamp,
   })
   if vim.fn.filereadable(metafile) == 0 then
-    error('failed to write workspace metadata file "' .. metafile .. '"')
-    return
-  end
-
-  files.write_json(userdatafile, userdata)
-  if vim.fn.filereadable(userdatafile) == 0 then
-    error('failed to write workspace user data file "' .. userdatafile .. '"')
+    notify.error('failed to write workspace metadata file "' .. metafile .. '"')
     return
   end
 
@@ -85,48 +74,31 @@ local function init_workspace(rootdir, userdata, timestamp)
     'session\n'
     .. 'Session.vim\n'
     .. 'PreSession.vim\n'
-    .. 'userdata.json\n'
     .. 'trailblazer\n')
 
-  run_hooks(state.on_init, { rootdir = rootdir, datadir = datadir }, userdata)
-
-  files.write_json(userdatafile, userdata)
+  run_hooks(state.on_init, { rootdir = rootdir, datadir = datadir })
   history.update(rootdir, timestamp)
 end
 
----@param src_rootdir string
----@param target_rootdir string
-local function move_workspace(src_rootdir, target_rootdir)
-  assert(type(src_rootdir) == 'string', 'source path must be of type string')
-  assert(type(target_rootdir) == 'string', 'target path must be of type string')
+---@param src string
+---@param dest string
+local function move_workspace(src, dest)
+  assert(type(src) == 'string', 'source path must be of type string')
+  assert(type(dest) == 'string', 'target path must be of type string')
 
-  local src_datadir = src_rootdir .. paths.sep() .. state.data_dirname
-  local target_datadir = target_rootdir .. paths.sep() .. state.data_dirname
-
-  if vim.fn.isdirectory(src_datadir) == 0 then
-    error(
-      'failed to move non-existent workspace root dir"' .. src_datadir .. '"'
-    )
+  local datadir = src .. paths.sep() .. state.data_dirname
+  if vim.fn.isdirectory(datadir) == 0 then
+    notify.error('failed to move non-existent workspace "' .. datadir .. '"')
     return
   end
 
-  vim.fn.mkdir(target_rootdir, 'p')
-  if vim.fn.isdirectory(target_rootdir) == 0 then
-    error(
-      'failed to create target workspace root dir "' .. target_rootdir .. '"'
-    )
+  vim.fn.mkdir(dest, 'p')
+  if vim.fn.isdirectory(dest) == 0 then
+    notify.error('failed to create target workspace "' .. dest .. '"')
     return
   end
 
-  if
-    target_datadir
-    and not target_datadir:match('^[\\/]+$')
-    and not target_datadir:match('^[%a]:[\\/]+$')
-  then
-    vim.fn.delete(target_datadir, 'rf')
-  end
-  vim.fn.rename(src_datadir, target_datadir)
-  history.rename(src_rootdir, target_rootdir)
+  history.rename(src, dest)
 end
 
 ---@param rootdir string
@@ -140,20 +112,17 @@ local function open_workspace(rootdir, timestamp)
   )
 
   local datadir = rootdir .. paths.sep() .. state.data_dirname
-  local meta_file = datadir .. paths.sep() .. state.metadata_filename
-  local user_file = datadir .. paths.sep() .. state.user_data_filename
+  local metafile = datadir .. paths.sep() .. state.metadata_filename
 
   if vim.fn.isdirectory(datadir) == 0 then
     error('failed to open non-existent workspace "' .. datadir .. '"')
     return
   end
 
-  local user_data = files.read_json(user_file) or {}
   run_hooks(state.on_open, {
     rootdir = rootdir,
     datadir = datadir,
-  }, user_data)
-  files.write_json(user_file, user_data)
+  })
   state.current_rootdir = rootdir
   history.update(rootdir, timestamp)
 end
@@ -170,27 +139,22 @@ local function close_workspace(timestamp)
     .. paths.sep()
     .. state.data_dirname
   local metafile = datadir .. paths.sep() .. state.metadata_filename
-  local userdatafile = datadir .. paths.sep() .. state.user_data_filename
 
-  local user_data = files.read_json(userdatafile) or {}
   run_hooks(state.on_close, {
     rootdir = state.current_rootdir,
     datadir = datadir,
-  }, user_data)
-  files.write_json(userdatafile, user_data)
+  })
   history.update(state.current_rootdir, timestamp)
   state.current_rootdir = nil
 end
 
 ---@param rootdir string path to workspace root dir
----@param user_data? userdata initial user data
 ---@param timestamp integer epoch sec to record as last access time
-function module.init(rootdir, user_data, timestamp)
+function module.init(rootdir, timestamp)
   assert(type(rootdir) == 'string', 'type of workspace path must be string')
-  assert(type(user_data) == 'table', 'type of user data must be table')
   assert(type(timestamp) == 'number', 'timestamp must be of type number')
   local p = paths.canonical(rootdir)
-  init_workspace(p, user_data, timestamp)
+  init_workspace(p, timestamp)
 end
 
 ---@param src string path to old workspace root dir
@@ -272,30 +236,6 @@ function module.write_metadata(rootdir, metadata)
     .. paths.sep()
     .. state.metadata_filename
   files.write_json(p, metadata)
-end
-
----@param rootdir string workspace root dir path
----@return userdata userdata user data
-function module.read_user_data(rootdir)
-  assert(type(rootdir) == 'string', 'workspace path must be of type string')
-  local p = rootdir
-    .. paths.sep()
-    .. state.data_dirname
-    .. paths.sep()
-    .. state.user_data_filename
-  return files.read_json(p) or {}
-end
-
----@param rootdir string workspace root dir path
----@param user_data userdata user data
-function module.write_user_data(rootdir, user_data)
-  assert(type(rootdir) == 'string', 'workspace path must be of type string')
-  local p = rootdir
-    .. paths.sep()
-    .. state.data_dirname
-    .. paths.sep()
-    .. state.user_data_filename
-  files.write_json(p, user_data)
 end
 
 return module

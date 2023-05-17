@@ -6,7 +6,6 @@ module.plugin_name = "hookspace"
 module.plugin_datadir = vim.fn.stdpath("data") .. path_sep .. "hookspace"
 module.data_dirname = ".hookspace"
 module.metadata_filename = "workspace.json"
-module.user_data_filename = "userdata.json"
 
 module.verbose = 1
 

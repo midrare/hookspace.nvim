@@ -3,7 +3,6 @@ local module = {}
 local os = require("os")
 local arrays = require('hookspace.luamisc.arrays')
 local paths = require('hookspace.luamisc.paths')
-local tables = require('hookspace.luamisc.tables')
 local history = require("hookspace.history")
 local state = require("hookspace.state")
 local notify = require("hookspace.notify")
@@ -31,7 +30,7 @@ function module.open(path)
   return true
 end
 
---- Close the currently open workspace, if extant.
+--- Close the currently open workspace, if open.
 function module.close()
   if workspaces.is_open() then
     workspaces.close(os.time())
@@ -41,11 +40,9 @@ end
 --- Create a new workspace at the given path
 --- If present, an already-extant workspace will be overwrittten.
 --- @param path string directory of workspace
---- @param user_data? userdata initial value of user data (optional)
-function module.init(path, user_data)
+function module.init(path)
   assert(type(path) == "string", "workspace path must be of type string")
-  user_data = user_data or {}
-  workspaces.init(path, user_data, os.time())
+  workspaces.init(path, os.time())
 end
 
 
@@ -65,101 +62,25 @@ end
 --- Get history of recently-accessed workspaces
 --- @return record[] records containing workspace information
 function module.read_history()
-  local results = history.read_records()
-  -- arrays.filter(results, function(r)
-  --   return workspaces.is_workspace(r.rootdir)
-  -- end)
-  -- arrays.transform(results, function(r)
-  --   local o = workspaces.read_metadata(r.rootdir)
-  --   o.datadir = workspaces.get_data_dir(r.rootdir)
-  --   o = vim.tbl_deep_extend("force", r, o)
-  --   return o
-  -- end)
-  return results
+  return history.read_records()
 end
 
 --- Read metadata from a workspace
 --- @param rootdir string path to workspace directory or `nil` for current workspace
---- @return workspace metadata workspace info
+--- @return workspace? metadata workspace info
 function module.read_metadata(rootdir)
-  if not rootdir and not state.current_rootdir then
-    notify.error(
-      "Cannot read metadata; no workspace specified "
-        .. "and no workspace is currently open.",
-      1
-    )
-    return {}
-  end
-
-  local root = state.current_rootdir
-  if rootdir then
-    root = paths.canonical(rootdir)
-  end
-
-  return workspaces.read_metadata(root)
+  rootdir = rootdir or state.current_rootdir
+  rootdir = paths.canonical(rootdir)
+  return workspaces.read_metadata(rootdir)
 end
 
 --- Write metadata for a workspace
 --- @param rootdir string path to workspace directory or `nil` for current workspace
 --- @param workspace workspace the metadata to write
 function module.write_metadata(rootdir, workspace)
-  if not rootdir and not state.current_rootdir then
-    notify.error(
-      "Cannot read metadata; no workspace specified "
-        .. "and no workspace is currently open.",
-      1
-    )
-    return {}
-  end
-
-  local root = state.current_rootdir
-  if rootdir then
-    root = paths.canonical(rootdir)
-  end
-
-  workspaces.write_metadata(root, workspace)
-end
-
---- Read user data a workspace
---- @param rootdir? string path to workspace directory or `nil` for current workspace
---- @return userdata userdata user data of the workspace
-function module.read_user_data(rootdir)
-  if not rootdir and not state.current_rootdir then
-    notify.error(
-      "Cannot read user data; no workspace specified "
-        .. "and no workspace is currently open.",
-      1
-    )
-    return {}
-  end
-
-  local root = state.current_rootdir
-  if rootdir then
-    root = paths.canonical(rootdir)
-  end
-
-  return workspaces.read_user_data(root)
-end
-
---- Write user data for a workspace
---- @param rootdir? string path to workspace directory or `nil` for current workspace
---- @param userdata userdata the user data to write
-function module.write_user_data(rootdir, userdata)
-  if not rootdir and not state.current_rootdir then
-    notify.error(
-      "Cannot write user data; no workspace specified "
-        .. "and no workspace is currently open.",
-      1
-    )
-    return {}
-  end
-
-  local root = state.current_rootdir
-  if rootdir then
-    root = paths.canonical(rootdir)
-  end
-
-  workspaces.write_user_data(root, userdata)
+  rootdir = rootdir or state.current_rootdir
+  rootdir = paths.canonical(rootdir)
+  workspaces.write_metadata(rootdir, workspace)
 end
 
 --- Check if the directory contains a workspace
@@ -169,29 +90,6 @@ function module.is_workspace(path)
   return type(path) == "string" and workspaces.is_workspace(path)
 end
 
-local function _history_complete(arg_lead, cmd_line, cursor_pos)
-  local canonical_lead = paths.canonical(arg_lead)
-  local filepaths = {}
-
-  -- insert from history
-  for _, v in ipairs(history.get_entries()) do
-    local canonical_historical_filepath = paths.canonical(v.rootdir)
-    vim.notify(canonical_historical_filepath .. " vs " .. canonical_lead)
-    if vim.startswith(canonical_historical_filepath, canonical_lead) then
-      table.insert(filepaths, v.rootdir)
-    end
-  end
-
-  -- -- insert from filesystem
-  -- if arg_lead and arg_lead:gsub("%s*", "") ~= "" then
-  --   local glob = arg_lead:gsub("[\\/]+$", "") .. aux.paths.sep() .. "*"
-  --   for _, p in ipairs(vim.fn.glob(glob, false, true)) do
-  --     table.insert(filepaths, p)
-  --   end
-  -- end
-
-  return filepaths
-end
 
 --- Prepare hookspace for use
 ---@param opts useropts options
@@ -217,13 +115,9 @@ function module.setup(opts)
     complete = "file",
   })
   vim.api.nvim_create_user_command("HookspaceList", function(tbl)
-    local simplified = {}
-    for _, v in pairs(module.read_history()) do
-      if v.rootdir then
-        table.insert(simplified, v.rootdir)
-      end
-    end
-    print(vim.inspect(simplified))
+    local rootdirs = module.read_history()
+    arrays.transform(rootdirs, function(o) return o.rootdir end)
+    print(vim.inspect(rootdirs))
   end, {
     desc = "list all workspaces in history",
     force = true,
@@ -258,7 +152,7 @@ function module.setup(opts)
       local info = vim.tbl_deep_extend("keep", {
         path = current_workspace,
       }, metadata)
-      for k, v in pairs(info) do
+      for k, _ in pairs(info) do
         if k:match("^__") then
           info[k] = nil
         end
