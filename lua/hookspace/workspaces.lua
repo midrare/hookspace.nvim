@@ -51,7 +51,7 @@ local function _userdir_name()
   return user_dir .. ".user" -- suffix so gitignore can auto-detect
 end
 
-local function _workspace_dirs(rootdir)
+local function _workspace_paths(rootdir)
   return {
     rootdir = rootdir,
     datadir = rootdir .. paths.sep() .. state.data_dirname,
@@ -99,34 +99,38 @@ local function run_hooks(hooks, workspace)
   end
 end
 
----@param rootdir string
----@param timestamp integer
-local function init_workspace(rootdir, timestamp)
-  assert(type(rootdir) == 'string', 'workspace path must be of type string')
-  assert(type(timestamp) == 'number', 'timestamp must be of type number')
+---@param rootdir string path to workspace root dir
+---@param timestamp integer epoch sec to record as last access time
+function module.init(rootdir, timestamp)
+  assert(rootdir, 'expected rootdir')
+  assert(timestamp, 'expected timestamp')
+  rootdir = paths.canonical(rootdir)
 
-  local workspace = _workspace_dirs(rootdir)
+  local workpaths = _workspace_paths(rootdir)
   local metadata = {
     name = paths.basename(paths.normpath(rootdir)) or "Unnamed",
     created = timestamp,
   }
 
-  files.write_json(workspace.metafile, metadata)
-  files.write_file(workspace.datadir .. paths.sep() .. '.notags')
-  files.write_file(workspace.datadir .. paths.sep() .. '.ignore', '*')
-  files.write_file(workspace.datadir .. paths.sep() .. '.tokeignore', '*')
-  files.write_file(workspace.datadir .. paths.sep() .. '.gitignore',
+  files.write_json(workpaths.metafile, metadata)
+  files.write_file(workpaths.datadir .. paths.sep() .. '.notags')
+  files.write_file(workpaths.datadir .. paths.sep() .. '.ignore', '*')
+  files.write_file(workpaths.datadir .. paths.sep() .. '.tokeignore', '*')
+  files.write_file(workpaths.datadir .. paths.sep() .. '.gitignore',
     table.concat({"*.user", "Session.vim", "PreSession.vim"}, "\n"))
 
-  run_hooks(state.on_init, workspace)
+  run_hooks(state.on_init, workpaths)
   history.update(rootdir, timestamp)
 end
 
----@param src string
----@param dest string
-local function move_workspace(src, dest)
-  assert(type(src) == 'string', 'source path must be of type string')
-  assert(type(dest) == 'string', 'target path must be of type string')
+---@param src string path to old workspace root dir
+---@param dest string path to new workspace root dir
+function module.move(src, dest)
+  assert(src, 'expected src root dir')
+  assert(dest, 'expected dest root dir')
+
+  src = paths.canonical(src)
+  dest = paths.canonical(dest)
 
   local datadir = src .. paths.sep() .. state.data_dirname
   if vim.fn.isdirectory(datadir) == 0 then
@@ -143,68 +147,35 @@ local function move_workspace(src, dest)
   history.rename(src, dest)
 end
 
----@param rootdir string
----@param timestamp integer
-local function open_workspace(rootdir, timestamp)
-  assert(type(rootdir) == 'string', 'workspace path must be of type string')
-  assert(type(timestamp) == 'number', 'timestamp must be of type number')
+---@param rootdir string path to root of workspace
+---@param timestamp integer epoch sec to record as last access time
+function module.open(rootdir, timestamp)
+  assert(rootdir, 'expected root dir')
+  assert(timestamp, 'expected timestamp')
   assert(not state.current_rootdir, 'another workspace is already open')
 
-  local workspace = _workspace_dirs(rootdir)
-  if vim.fn.isdirectory(workspace.datadir) <= 0 then
-    notify.error('failed to open non-existent workspace "' .. workspace.datadir .. '"')
+  rootdir = paths.canonical(rootdir)
+  local workpaths = _workspace_paths(rootdir)
+  if vim.fn.isdirectory(workpaths.datadir) <= 0 then
+    notify.error('failed to open non-existent workspace "' .. workpaths.datadir .. '"')
     return
   end
 
-  run_hooks(state.on_open, workspace)
+  run_hooks(state.on_open, workpaths)
   state.current_rootdir = rootdir
   history.update(rootdir, timestamp)
 end
 
----@param timestamp integer
-local function close_workspace(timestamp)
-  assert(type(timestamp) == 'number', 'timestamp must be of type number')
-  assert(state.current_rootdir, 'cannot close non-open workspace')
-
-  local workspace = _workspace_dirs(state.current_rootdir)
-
-  run_hooks(state.on_close, workspace)
-  history.update(state.current_rootdir, timestamp)
-  state.current_rootdir = nil
-end
-
----@param rootdir string path to workspace root dir
----@param timestamp integer epoch sec to record as last access time
-function module.init(rootdir, timestamp)
-  assert(type(rootdir) == 'string', 'type of workspace path must be string')
-  assert(type(timestamp) == 'number', 'timestamp must be of type number')
-  local p = paths.canonical(rootdir)
-  init_workspace(p, timestamp)
-end
-
----@param src string path to old workspace root dir
----@param target string path to new workspace root dir
-function module.move(src, target)
-  assert(type(src) == 'string', 'source workspace path must be a string')
-  assert(type(target) == 'string', 'target workspace path must be a string')
-  local p1 = paths.canonical(src)
-  local p2 = paths.canonical(target)
-  move_workspace(p1, p2)
-end
-
----@param rootdir string path to root of workspace
----@param timestamp integer epoch sec to record as last access time
-function module.open(rootdir, timestamp)
-  assert(type(rootdir) == 'string', 'workspace path must be of type string')
-  assert(type(timestamp) == 'number', 'timestamp must be of type number')
-  local p = paths.canonical(rootdir)
-  open_workspace(p, timestamp)
-end
-
 ---@param timestamp integer epoch sec to record as last access time
 function module.close(timestamp)
-  assert(type(timestamp) == 'number', 'timestamp must be of type number')
-  close_workspace(timestamp)
+  assert(timestamp, 'expected timestamp')
+  assert(state.current_rootdir, 'cannot close non-open workspace')
+
+  local workpaths = _workspace_paths(state.current_rootdir)
+
+  run_hooks(state.on_close, workpaths)
+  history.update(state.current_rootdir, timestamp)
+  state.current_rootdir = nil
 end
 
 ---@return boolean is_open if a workspace is currently open or not
@@ -224,15 +195,15 @@ function module.get_data_dir(rootdir)
   if not rootdir then
     return nil
   end
-  return _workspace_dirs(rootdir).datadir
+  return _workspace_paths(rootdir).datadir
 end
 
 ---@param rootdir string path to root of workspace
 ---@return boolean is_workspace true if is root dir of a workspace
 function module.is_workspace(rootdir)
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
-  local datadir = rootdir .. paths.sep() .. state.data_dirname
-  return vim.fn.isdirectory(datadir) == 1
+  local workpaths = _workspace_paths(rootdir)
+  return vim.fn.isdirectory(workpaths.datadir) == 1
 end
 
 ---@param rootdir? string path to root of workspace
@@ -242,25 +213,17 @@ function module.read_metadata(rootdir)
   if not rootdir then
     return nil
   end
-  local p = rootdir
-    .. paths.sep()
-    .. state.data_dirname
-    .. paths.sep()
-    .. state.metadata_filename
-  return files.read_json(p)
+  local workpaths = _workspace_paths(rootdir)
+  return files.read_json(workpaths.metafile)
 end
 
 ---@param rootdir? string path to root of workspace
 ---@param metadata workspace workspace info
 function module.write_metadata(rootdir, metadata)
   rootdir = rootdir or state.current_rootdir
-  assert(type(rootdir) == 'string', 'workspace path must be of type string')
-  local p = rootdir
-    .. paths.sep()
-    .. state.data_dirname
-    .. paths.sep()
-    .. state.metadata_filename
-  files.write_json(p, metadata)
+  assert(rootdir, 'expected root dir or already-opened root dir')
+  local workpaths = _workspace_paths(rootdir)
+  files.write_json(workpaths.metafile, metadata)
 end
 
 return module
