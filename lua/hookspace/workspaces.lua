@@ -129,6 +129,8 @@ function M.init(rootdir, timestamp)
     table.concat({ "*.user", "Session.vim", "PreSession.vim" }, "\n")
   )
 
+  files.makedirs(workpaths.datadir)
+  files.makedirs(workpaths.userdir)
   run_hooks(useropts.on_init, workpaths)
   history.update(rootdir, timestamp)
 end
@@ -149,6 +151,8 @@ function M.open(rootdir, timestamp)
     return
   end
 
+  files.makedirs(workpaths.datadir)
+  files.makedirs(workpaths.userdir)
   run_hooks(useropts.on_open, workpaths)
   current_rootdir = rootdir
   history.update(rootdir, timestamp)
@@ -161,6 +165,8 @@ function M.close(timestamp)
 
   local workpaths = _workspace_paths(current_rootdir)
 
+  files.makedirs(workpaths.datadir)
+  files.makedirs(workpaths.userdir)
   run_hooks(useropts.on_close, workpaths)
   history.update(current_rootdir, timestamp)
   current_rootdir = nil
