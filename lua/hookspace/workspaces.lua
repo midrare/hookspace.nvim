@@ -250,9 +250,10 @@ function module.read_metadata(rootdir)
   return files.read_json(p)
 end
 
----@param rootdir string path to root of workspace
+---@param rootdir? string path to root of workspace
 ---@param metadata workspace workspace info
 function module.write_metadata(rootdir, metadata)
+  rootdir = rootdir or state.current_rootdir
   assert(type(rootdir) == 'string', 'workspace path must be of type string')
   local p = rootdir
     .. paths.sep()
