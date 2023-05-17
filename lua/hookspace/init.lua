@@ -1,6 +1,5 @@
 local M = {}
 
-local os = require("os")
 local arrays = require('hookspace.luamisc.arrays')
 local paths = require('hookspace.luamisc.paths')
 local history = require("hookspace.history")
