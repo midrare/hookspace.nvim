@@ -1,20 +1,19 @@
 local M = {}
 
-local files = require('hookspace.luamisc.files')
-local paths = require('hookspace.luamisc.paths')
-local platform = require('hookspace.luamisc.platform')
-local sha2 = require('hookspace.luamisc.sha2')
-local history = require('hookspace.history')
-local notify = require('hookspace.notify')
-local consts = require('hookspace.consts')
-local useropts = require('hookspace.useropts')
+local files = require("hookspace.luamisc.files")
+local paths = require("hookspace.luamisc.paths")
+local platform = require("hookspace.luamisc.platform")
+local sha2 = require("hookspace.luamisc.sha2")
+local history = require("hookspace.history")
+local notify = require("hookspace.notify")
+local consts = require("hookspace.consts")
+local useropts = require("hookspace.useropts")
 
 local current_rootdir = nil
 
 local function _str_strip(s)
   return s:gsub("^%s+", ""):gsub("%s+$", "")
 end
-
 
 local function _random_string(len)
   local chars = "abcdefghijklmnopqrstuvwxyz"
@@ -57,29 +56,36 @@ local function _workspace_paths(rootdir)
   return {
     rootdir = rootdir,
     datadir = rootdir .. paths.sep() .. consts.workspace_dirname,
-    userdir = rootdir .. paths.sep() .. consts.workspace_dirname .. paths.sep() .. _userdir_name(),
-    metafile = rootdir .. paths.sep() .. consts.workspace_dirname .. paths.sep() .. consts.metadata_filename,
+    userdir = rootdir
+      .. paths.sep()
+      .. consts.workspace_dirname
+      .. paths.sep()
+      .. _userdir_name(),
+    metafile = rootdir
+      .. paths.sep()
+      .. consts.workspace_dirname
+      .. paths.sep()
+      .. consts.metadata_filename,
   }
 end
-
 
 ---@param hooks string|hook|hook[]
 ---@param workspace workspace
 local function run_hooks(hooks, workspace)
   assert(
     hooks == nil
-      or type(hooks) == 'table'
-      or type(hooks) == 'function'
-      or type(hooks) == 'string',
-    'hooks must be of type nil, table, function, or string'
+      or type(hooks) == "table"
+      or type(hooks) == "function"
+      or type(hooks) == "string",
+    "hooks must be of type nil, table, function, or string"
   )
-  assert(workspace, 'expected workspace')
+  assert(workspace, "expected workspace")
 
-  if type(hooks) == 'table' then
+  if type(hooks) == "table" then
     for _, hook in ipairs(hooks) do
       run_hooks(hook, workspace)
     end
-  elseif type(hooks) == 'function' then
+  elseif type(hooks) == "function" then
     local status_ok, error_msg = pcall(hooks, workspace)
     if not status_ok then
       notify.error('Failed to run hook "' .. vim.inspect(hooks) .. '"')
@@ -87,7 +93,7 @@ local function run_hooks(hooks, workspace)
         notify.trace(error_msg)
       end
     end
-  elseif type(hooks) == 'string' then
+  elseif type(hooks) == "string" then
     ---@diagnostic disable-next-line: param-type-mismatch
     local status_ok, error_msg = pcall(vim.cmd, hooks)
     if not status_ok then
@@ -104,8 +110,8 @@ end
 ---@param rootdir string path to workspace root dir
 ---@param timestamp integer epoch sec to record as last access time
 function M.init(rootdir, timestamp)
-  assert(rootdir, 'expected rootdir')
-  assert(timestamp, 'expected timestamp')
+  assert(rootdir, "expected rootdir")
+  assert(timestamp, "expected timestamp")
   rootdir = paths.canonical(rootdir)
 
   local workpaths = _workspace_paths(rootdir)
@@ -115,11 +121,13 @@ function M.init(rootdir, timestamp)
   }
 
   files.write_json(workpaths.metafile, metadata)
-  files.write_file(workpaths.datadir .. paths.sep() .. '.notags')
-  files.write_file(workpaths.datadir .. paths.sep() .. '.ignore', '*')
-  files.write_file(workpaths.datadir .. paths.sep() .. '.tokeignore', '*')
-  files.write_file(workpaths.datadir .. paths.sep() .. '.gitignore',
-    table.concat({"*.user", "Session.vim", "PreSession.vim"}, "\n"))
+  files.write_file(workpaths.datadir .. paths.sep() .. ".notags")
+  files.write_file(workpaths.datadir .. paths.sep() .. ".ignore", "*")
+  files.write_file(workpaths.datadir .. paths.sep() .. ".tokeignore", "*")
+  files.write_file(
+    workpaths.datadir .. paths.sep() .. ".gitignore",
+    table.concat({ "*.user", "Session.vim", "PreSession.vim" }, "\n")
+  )
 
   run_hooks(useropts.on_init, workpaths)
   history.update(rootdir, timestamp)
@@ -128,14 +136,16 @@ end
 ---@param rootdir string path to root of workspace
 ---@param timestamp integer epoch sec to record as last access time
 function M.open(rootdir, timestamp)
-  assert(rootdir, 'expected root dir')
-  assert(timestamp, 'expected timestamp')
-  assert(not current_rootdir, 'another workspace is already open')
+  assert(rootdir, "expected root dir")
+  assert(timestamp, "expected timestamp")
+  assert(not current_rootdir, "another workspace is already open")
 
   rootdir = paths.canonical(rootdir)
   local workpaths = _workspace_paths(rootdir)
   if vim.fn.isdirectory(workpaths.datadir) <= 0 then
-    notify.error('failed to open non-existent workspace "' .. workpaths.datadir .. '"')
+    notify.error(
+      'failed to open non-existent workspace "' .. workpaths.datadir .. '"'
+    )
     return
   end
 
@@ -146,8 +156,8 @@ end
 
 ---@param timestamp integer epoch sec to record as last access time
 function M.close(timestamp)
-  assert(timestamp, 'expected timestamp')
-  assert(current_rootdir, 'cannot close non-open workspace')
+  assert(timestamp, "expected timestamp")
+  assert(current_rootdir, "cannot close non-open workspace")
 
   local workpaths = _workspace_paths(current_rootdir)
 
@@ -179,7 +189,7 @@ end
 ---@param rootdir string path to root of workspace
 ---@return boolean is_workspace true if is root dir of a workspace
 function M.is_workspace(rootdir)
-  assert(type(rootdir) == 'string', 'workspace path must be of type string')
+  assert(type(rootdir) == "string", "workspace path must be of type string")
   local workpaths = _workspace_paths(rootdir)
   return vim.fn.isdirectory(workpaths.datadir) == 1
 end
@@ -199,7 +209,7 @@ end
 ---@param metadata workspace workspace info
 function M.write_metadata(rootdir, metadata)
   rootdir = rootdir or current_rootdir
-  assert(rootdir, 'expected root dir or already-opened root dir')
+  assert(rootdir, "expected root dir or already-opened root dir")
   local workpaths = _workspace_paths(rootdir)
   files.write_json(workpaths.metafile, metadata)
 end

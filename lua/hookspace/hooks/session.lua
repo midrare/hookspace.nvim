@@ -7,33 +7,33 @@ local user_opts = vim.deepcopy(default_opts)
 
 local _ = nil
 local bufdel = {}
-_, bufdel.closebuffers = pcall(require, 'close_buffers')
-_, bufdel.bufdelete = pcall(require, 'bufdelete')
+_, bufdel.closebuffers = pcall(require, "close_buffers")
+_, bufdel.bufdelete = pcall(require, "bufdelete")
 
-local path_sep = '/'
-if vim.fn.has('win32') > 0 then
-  path_sep = '\\'
+local path_sep = "/"
+if vim.fn.has("win32") > 0 then
+  path_sep = "\\"
 end
 
 local function get_dirname(filename)
-  local d = filename:match('^(.*[\\/]).+$')
+  local d = filename:match("^(.*[\\/]).+$")
   if d ~= nil then
-    d = d:match('^(.+)[\\/]+$') or d
+    d = d:match("^(.+)[\\/]+$") or d
   end
   return d
 end
 
 local function write_session(filepath)
-  local old_sessionoptions = vim.api.nvim_get_option('sessionoptions')
+  local old_sessionoptions = vim.api.nvim_get_option("sessionoptions")
   vim.cmd([[set sessionoptions-=blank]])
   vim.cmd([[set sessionoptions-=options]])
   vim.cmd([[set sessionoptions+=tabpages]])
 
-  vim.fn.mkdir(get_dirname(filepath), 'p')
-  local tmp_filepath = filepath .. vim.fn.getpid() .. '.tmp~'
+  vim.fn.mkdir(get_dirname(filepath), "p")
+  local tmp_filepath = filepath .. vim.fn.getpid() .. ".tmp~"
   local status_ok, error_msg =
     ---@diagnostic disable-next-line: param-type-mismatch
-    pcall(vim.cmd, 'mksession! ' .. vim.fn.fnameescape(tmp_filepath))
+    pcall(vim.cmd, "mksession! " .. vim.fn.fnameescape(tmp_filepath))
   if status_ok then
     vim.fn.delete(filepath)
     vim.fn.rename(tmp_filepath, filepath)
@@ -49,7 +49,7 @@ local function write_session(filepath)
   end
 
   vim.fn.delete(tmp_filepath)
-  vim.api.nvim_set_option('sessionoptions', old_sessionoptions)
+  vim.api.nvim_set_option("sessionoptions", old_sessionoptions)
 end
 
 local function close_buffer(bufnr)
@@ -59,7 +59,7 @@ local function close_buffer(bufnr)
     pcall(bufdel.bufdelete.bufdelete, bufnr, true)
   else
     ---@diagnostic disable-next-line: param-type-mismatch
-    pcall(vim.cmd, 'bd! ' .. bufnr)
+    pcall(vim.cmd, "bd! " .. bufnr)
   end
 end
 
@@ -69,26 +69,26 @@ function module.setup(opts)
 end
 
 function module.on_open(workspace)
-  local session = workspace.datadir .. path_sep .. 'Session.vim'
-  local original = vim.fn.stdpath('data') .. path_sep .. 'PreSession.vim'
+  local session = workspace.datadir .. path_sep .. "Session.vim"
+  local original = vim.fn.stdpath("data") .. path_sep .. "PreSession.vim"
 
   vim.fn.delete(original)
   write_session(original)
 
-  vim.cmd('silent! %bdelete!')
-  vim.cmd('silent! tabonly!')
-  vim.cmd('silent! only!')
-  vim.cmd('silent! enew!')
+  vim.cmd("silent! %bdelete!")
+  vim.cmd("silent! tabonly!")
+  vim.cmd("silent! only!")
+  vim.cmd("silent! enew!")
 
   if vim.fn.filereadable(session) == 1 then
     ---@diagnostic disable-next-line: param-type-mismatch
-    pcall(vim.cmd, 'source ' .. vim.fn.fnameescape(session))
+    pcall(vim.cmd, "source " .. vim.fn.fnameescape(session))
 
     -- close buffers with non-existant files
     ---@diagnostic disable-next-line: param-type-mismatch
-    for bufno = 1, vim.fn.bufnr('$') do
+    for bufno = 1, vim.fn.bufnr("$") do
       if vim.fn.buflisted(bufno) == 1 then
-        local p = vim.fn.expand('#' .. bufno .. ':p')
+        local p = vim.fn.expand("#" .. bufno .. ":p")
         if vim.fn.filereadable(p) <= 0 then
           close_buffer(bufno)
         end
@@ -98,29 +98,29 @@ function module.on_open(workspace)
 end
 
 function module.on_close(workspace)
-  local session = workspace.datadir .. path_sep .. 'Session.vim'
-  local original = vim.fn.stdpath('data') .. path_sep .. 'PreSession.vim'
+  local session = workspace.datadir .. path_sep .. "Session.vim"
+  local original = vim.fn.stdpath("data") .. path_sep .. "PreSession.vim"
 
   write_session(session)
 
-  vim.cmd('silent! %bdelete!')
-  vim.cmd('silent! tabonly!')
-  vim.cmd('silent! only!')
-  vim.cmd('silent! enew!')
+  vim.cmd("silent! %bdelete!")
+  vim.cmd("silent! tabonly!")
+  vim.cmd("silent! only!")
+  vim.cmd("silent! enew!")
 
-  if vim.fn.exists(':Alpha') then
-    vim.cmd('silent! Alpha')
-  elseif vim.fn.exists(':Dashboard') then
-    vim.cmd('silent! Dashboard')
-  elseif vim.fn.exists(':Startify') then
-    vim.cmd('silent! Startify')
-  elseif vim.fn.exists(':Startup') then
-    vim.cmd('silent! Startup display')
+  if vim.fn.exists(":Alpha") then
+    vim.cmd("silent! Alpha")
+  elseif vim.fn.exists(":Dashboard") then
+    vim.cmd("silent! Dashboard")
+  elseif vim.fn.exists(":Startify") then
+    vim.cmd("silent! Startify")
+  elseif vim.fn.exists(":Startup") then
+    vim.cmd("silent! Startup display")
   end
 
   if vim.fn.filereadable(original) == 1 then
     ---@diagnostic disable-next-line: param-type-mismatch
-    pcall(vim.cmd, 'source ' .. vim.fn.fnameescape(original))
+    pcall(vim.cmd, "source " .. vim.fn.fnameescape(original))
     vim.fn.delete(original)
   end
 end

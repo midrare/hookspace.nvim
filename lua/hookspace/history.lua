@@ -25,8 +25,10 @@ end
 
 local function is_record_has_path(record, rootdir)
   local c = paths.normpath(paths.normcase(record.rootdir))
-  return rootdir == record.rootdir or rootdir == record.rootdir
-    or rootdir == c or rootdir == c
+  return rootdir == record.rootdir
+    or rootdir == record.rootdir
+    or rootdir == c
+    or rootdir == c
 end
 
 local function cmp_last_accessed(rec1, rec2)

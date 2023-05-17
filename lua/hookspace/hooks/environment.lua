@@ -1,21 +1,21 @@
 local module = {}
 
-local default_opts = { filename = 'env.json' }
+local default_opts = { filename = "env.json" }
 local user_opts = vim.deepcopy(default_opts)
 
 local old_env_names = nil
 local old_env_values = nil
 
-local sep = '/'
-if vim.fn.has('win32') >= 1 then
-  sep = '\\'
+local sep = "/"
+if vim.fn.has("win32") >= 1 then
+  sep = "\\"
 end
 
 local function tbl_sub_all(tbl, pat, repl)
   for k, v in pairs(tbl) do
-    if type(v) == 'string' then
+    if type(v) == "string" then
       tbl[k] = v:gsub(pat, repl)
-    elseif type(v) == 'table' then
+    elseif type(v) == "table" then
       tbl_sub_all(v, pat, repl)
     end
   end
@@ -35,11 +35,11 @@ function module.on_open(workspace)
 
   local cfg_path = workspace.datadir .. sep .. user_opts.filename
   if vim.fn.filereadable(cfg_path) >= 1 then
-    local plaintext = vim.fn.readfile(cfg_path, 'B')
+    local plaintext = vim.fn.readfile(cfg_path, "B")
     if plaintext then
       local localenv = vim.fn.json_decode(plaintext)
-      tbl_sub_all(localenv, '{rootdir}', workspace.rootdir)
-      tbl_sub_all(localenv, '{datadir}', workspace.datadir)
+      tbl_sub_all(localenv, "{rootdir}", workspace.rootdir)
+      tbl_sub_all(localenv, "{datadir}", workspace.datadir)
 
       ---@diagnostic disable-next-line: param-type-mismatch
       for name, value in pairs(localenv) do
@@ -50,7 +50,7 @@ function module.on_open(workspace)
           -- safer than interpolating the value directly
           vim.g.ORVQUZFPUA = name
           vim.g.ULSSYOZRYK = value
-          vim.cmd('call setenv(g:ORVQUZFPUA, g:ULSSYOZRYK)')
+          vim.cmd("call setenv(g:ORVQUZFPUA, g:ULSSYOZRYK)")
           vim.g.ORVQUZFPUA = nil
           vim.g.ULSSYOZRYK = nil
         end
@@ -70,9 +70,9 @@ function module.on_close(workspace)
         vim.g.ORVQUZFPUA = name
         vim.g.ULSSYOZRYK = value
         if value ~= nil then
-          vim.cmd('call setenv(g:ORVQUZFPUA, g:ULSSYOZRYK)')
+          vim.cmd("call setenv(g:ORVQUZFPUA, g:ULSSYOZRYK)")
         else
-          vim.cmd('call setenv(g:ORVQUZFPUA, v:null)')
+          vim.cmd("call setenv(g:ORVQUZFPUA, v:null)")
         end
         vim.g.ORVQUZFPUA = nil
         vim.g.ULSSYOZRYK = nil

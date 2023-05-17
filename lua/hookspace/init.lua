@@ -1,12 +1,11 @@
 local M = {}
 
-local arrays = require('hookspace.luamisc.arrays')
-local paths = require('hookspace.luamisc.paths')
+local arrays = require("hookspace.luamisc.arrays")
+local paths = require("hookspace.luamisc.paths")
 local history = require("hookspace.history")
 local useropts = require("hookspace.useropts")
 local notify = require("hookspace.notify")
 local workspaces = require("hookspace.workspaces")
-
 
 --- Check if a workspace is currently open
 --- @return boolean is_open if a workspace is open
@@ -79,7 +78,6 @@ function M.is_workspace(path)
   return type(path) == "string" and workspaces.is_workspace(path)
 end
 
-
 ---@param rootdir? string nil for currently-open workspace
 ---@param name string new workspace name
 function M.rename(rootdir, name)
@@ -110,7 +108,6 @@ local function _cmd_open(tbl)
   end
 end
 
-
 local function _cmd_show_info(_)
   local rootdir = workspaces.get_root_dir()
   if not rootdir then
@@ -122,7 +119,6 @@ local function _cmd_show_info(_)
   print(vim.inspect(metadata))
 end
 
-
 local function _cmd_rename(tbl)
   local rootdir = workspaces.get_root_dir()
   if tbl and tbl.args and rootdir then
@@ -130,7 +126,6 @@ local function _cmd_rename(tbl)
     M.rename(rootdir, name)
   end
 end
-
 
 --- Prepare hookspace for use
 ---@param opts useropts options
@@ -158,7 +153,9 @@ function M.setup(opts)
   })
   vim.api.nvim_create_user_command("HookspaceList", function(_)
     local rootdirs = M.read_history()
-    arrays.transform(rootdirs, function(o) return o.rootdir end)
+    arrays.transform(rootdirs, function(o)
+      return o.rootdir
+    end)
     print(vim.inspect(rootdirs))
   end, {
     desc = "list all workspaces in history",

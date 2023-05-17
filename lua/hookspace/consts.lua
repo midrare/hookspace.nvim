@@ -1,6 +1,6 @@
 local M = {}
 
-local sep = vim.fn.has('win32') > 0 and '\\' or '/'
+local sep = vim.fn.has("win32") > 0 and "\\" or "/"
 
 M.plugin = "hookspace"
 M.plugin_dir = vim.fn.stdpath("data") .. sep .. "hookspace"

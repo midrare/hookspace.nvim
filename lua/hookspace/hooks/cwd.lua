@@ -18,7 +18,7 @@ end
 
 ---@diagnostic disable-next-line: unused-local
 function module.on_close(workspace)
-  vim.api.nvim_set_current_dir(old_global_cwd or '~')
+  vim.api.nvim_set_current_dir(old_global_cwd or "~")
   old_global_cwd = nil
 end
 
