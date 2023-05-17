@@ -1,0 +1,6 @@
+==============================================================================
+INTRODUCTION                                                    *hookspace.nvim*
+
+hookspace is a session/workspace/project manager for Neovim.
+
+ vim:tw=78:ts=8:ft=help:norl:

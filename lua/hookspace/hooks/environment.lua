@@ -40,6 +40,7 @@ function module.on_open(workspace)
       local localenv = vim.fn.json_decode(plaintext)
       tbl_sub_all(localenv, "{rootdir}", workspace.rootdir)
       tbl_sub_all(localenv, "{datadir}", workspace.datadir)
+      tbl_sub_all(localenv, "{userdir}", workspace.userdir)
 
       ---@diagnostic disable-next-line: param-type-mismatch
       for name, value in pairs(localenv) do
