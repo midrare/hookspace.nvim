@@ -213,22 +213,18 @@ function module.is_open()
 end
 
 ---@return string? dir root dir of currently open workspace
-function module.get_current_root_dir()
+function module.get_root_dir()
   return state.current_rootdir
 end
 
----@return string? dir data dir of currently open workspace
-function module.get_current_data_dir()
-  if state.current_rootdir ~= nil then
-    return state.current_rootdir .. paths.sep() .. state.data_dirname
-  end
-  return nil
-end
-
----@param rootdir string workspace root dir
----@return string datadir workspace data dir
+---@param rootdir? string workspace root dir
+---@return string? datadir workspace data dir
 function module.get_data_dir(rootdir)
-  return rootdir .. paths.sep() .. state.data_dirname
+  rootdir = rootdir or state.current_rootdir
+  if not rootdir then
+    return nil
+  end
+  return _workspace_dirs(rootdir).datadir
 end
 
 ---@param rootdir string path to root of workspace
@@ -239,10 +235,13 @@ function module.is_workspace(rootdir)
   return vim.fn.isdirectory(datadir) == 1
 end
 
----@param rootdir string path to root of workspace
+---@param rootdir? string path to root of workspace
 ---@return workspace? workspace info
 function module.read_metadata(rootdir)
-  assert(type(rootdir) == 'string', 'workspace path must be of type string')
+  rootdir = rootdir or state.current_rootdir
+  if not rootdir then
+    return nil
+  end
   local p = rootdir
     .. paths.sep()
     .. state.data_dirname

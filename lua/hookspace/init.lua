@@ -56,7 +56,7 @@ end
 --- Get the directory of the currently open workspace
 --- @return string? path to directory of open workspace or `nil`
 function module.get_current_workspace()
-  return workspaces.get_current_root_dir()
+  return workspaces.get_root_dir()
 end
 
 --- Get history of recently-accessed workspaces
@@ -146,7 +146,7 @@ function module.setup(opts)
     nargs = 0,
   })
   vim.api.nvim_create_user_command("HookspaceInfo", function(tbl)
-    local current_workspace = workspaces.get_current_root_dir()
+    local current_workspace = workspaces.get_root_dir()
     if current_workspace then
       local metadata = workspaces.read_metadata(current_workspace)
       local info = vim.tbl_deep_extend("keep", {
@@ -167,7 +167,7 @@ function module.setup(opts)
     nargs = 0,
   })
   vim.api.nvim_create_user_command("HookspaceRename", function(tbl)
-    local rootdir = workspaces.get_current_root_dir()
+    local rootdir = workspaces.get_root_dir()
     if tbl and tbl.args and rootdir then
       local metadata = workspaces.read_metadata(rootdir)
       metadata.name = vim.fn.trim(tbl.args)
