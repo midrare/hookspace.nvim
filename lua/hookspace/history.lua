@@ -10,36 +10,36 @@ local records_path = vim.fn.stdpath("data")
   .. paths.sep()
   .. "workspaces.json"
 
-local function is_record_valid(r)
-  return r.rootdir
-    and type(r.rootdir) == "string"
+local function is_record_valid(record)
+  return record.rootdir
+    and type(record.rootdir) == "string"
     and (
-      vim.fn.isdirectory(r.rootdir) == 1
-      or vim.fn.filereadable(r.rootdir) == 1
+      vim.fn.isdirectory(record.rootdir) == 1
+      or vim.fn.filereadable(record.rootdir) == 1
     )
 end
 
-local function get_last_accessed(r)
-  return r and r.last_accessed or 0
+local function get_last_accessed(record)
+  return record and record.last_accessed or 0
 end
 
-local function is_record_has_path(r, rootdir)
-  local c = paths.normpath(paths.normcase(r.rootdir))
-  return rootdir == r.rootdir or rootdir == r.rootdir
+local function is_record_has_path(record, rootdir)
+  local c = paths.normpath(paths.normcase(record.rootdir))
+  return rootdir == record.rootdir or rootdir == record.rootdir
     or rootdir == c or rootdir == c
 end
 
-local function cmp_last_accessed(r1, r2)
-  if not r1.last_accessed and not r2.last_accessed then
+local function cmp_last_accessed(rec1, rec2)
+  if not rec1.last_accessed and not rec2.last_accessed then
     return 0
   elseif
-    (r1.last_accessed and not r2.last_accessed)
-    or (r1.last_accessed < r2.last_accessed)
+    (rec1.last_accessed and not rec2.last_accessed)
+    or (rec1.last_accessed < rec2.last_accessed)
   then
     return -1
   elseif
-    (not r1.last_accessed and r2.last_accessed)
-    or (r1.last_accessed > r2.last_accessed)
+    (not rec1.last_accessed and rec2.last_accessed)
+    or (rec1.last_accessed > rec2.last_accessed)
   then
     return 1
   end
