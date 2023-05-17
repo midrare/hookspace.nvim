@@ -81,6 +81,25 @@ function M.is_workspace(path)
 end
 
 
+---@param rootdir? string nil for currently-open workspace
+---@param name string new workspace name
+function M.rename(rootdir, name)
+  name = name and vim.fn.trim(name)
+  if not name or #name <= 0 then
+    notify.error("Expected new workspace name to be provided.")
+    return
+  end
+
+  local metadata = workspaces.read_metadata(rootdir)
+  if not metadata then
+    notify.error("Workspace not found.")
+    return
+  end
+
+  metadata.name = name
+  workspaces.write_metadata(rootdir, metadata)
+end
+
 --- Prepare hookspace for use
 ---@param opts useropts options
 function M.setup(opts)
@@ -96,6 +115,7 @@ function M.setup(opts)
     if tbl and tbl.fargs then
       for _, rootdir in ipairs(tbl.fargs) do
         M.init(rootdir)
+        break
       end
     end
   end, {
@@ -104,7 +124,7 @@ function M.setup(opts)
     nargs = 1,
     complete = "file",
   })
-  vim.api.nvim_create_user_command("HookspaceList", function(tbl)
+  vim.api.nvim_create_user_command("HookspaceList", function(_)
     local rootdirs = M.read_history()
     arrays.transform(rootdirs, function(o) return o.rootdir end)
     print(vim.inspect(rootdirs))
@@ -128,50 +148,44 @@ function M.setup(opts)
     nargs = 1,
     complete = "file",
   })
-  vim.api.nvim_create_user_command("HookspaceClose", function(tbl)
+  vim.api.nvim_create_user_command("HookspaceClose", function(_)
     M.close()
   end, {
     desc = "close the currently open workspace",
     force = true,
     nargs = 0,
   })
-  vim.api.nvim_create_user_command("HookspaceInfo", function(tbl)
-    local current_workspace = workspaces.get_root_dir()
-    if current_workspace then
-      local metadata = workspaces.read_metadata(current_workspace)
-      local info = vim.tbl_deep_extend("keep", {
-        path = current_workspace,
-      }, metadata)
-      for k, _ in pairs(info) do
-        if k:match("^__") then
-          info[k] = nil
-        end
-      end
-      print("Current workspace: " .. vim.inspect(info))
-    else
-      print("No workspace is loaded")
+  vim.api.nvim_create_user_command("HookspaceInfo", function(_)
+    local rootdir = workspaces.get_root_dir()
+    if not rootdir then
+      print("No workspace open")
+      return
     end
+
+    local metadata = workspaces.read_metadata(rootdir)
+    print(vim.inspect(metadata))
   end, {
     desc = "show workspace info",
     force = true,
     nargs = 0,
   })
+
   vim.api.nvim_create_user_command("HookspaceRename", function(tbl)
     local rootdir = workspaces.get_root_dir()
     if tbl and tbl.args and rootdir then
-      local metadata = workspaces.read_metadata(rootdir)
-      metadata.name = vim.fn.trim(tbl.args)
-      workspaces.write_metadata(rootdir, metadata)
+      local name = table.concat(tbl.args, " ")
+      M.rename(rootdir, name)
     end
   end, {
     desc = "rename workspace",
     force = true,
     nargs = 1,
   })
+
   vim.api.nvim_create_augroup("hookspace", { clear = true })
   vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
     group = "hookspace",
-    callback = function(tbl)
+    callback = function(_)
       M.close()
     end,
     desc = "automatically close hookspace when exiting app",
