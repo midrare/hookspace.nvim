@@ -123,30 +123,6 @@ function module.init(rootdir, timestamp)
   history.update(rootdir, timestamp)
 end
 
----@param src string path to old workspace root dir
----@param dest string path to new workspace root dir
-function module.move(src, dest)
-  assert(src, 'expected src root dir')
-  assert(dest, 'expected dest root dir')
-
-  src = paths.canonical(src)
-  dest = paths.canonical(dest)
-
-  local datadir = src .. paths.sep() .. state.data_dirname
-  if vim.fn.isdirectory(datadir) == 0 then
-    notify.error('failed to move non-existent workspace "' .. datadir .. '"')
-    return
-  end
-
-  vim.fn.mkdir(dest, 'p')
-  if vim.fn.isdirectory(dest) == 0 then
-    notify.error('failed to create target workspace "' .. dest .. '"')
-    return
-  end
-
-  history.rename(src, dest)
-end
-
 ---@param rootdir string path to root of workspace
 ---@param timestamp integer epoch sec to record as last access time
 function module.open(rootdir, timestamp)

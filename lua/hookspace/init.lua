@@ -45,14 +45,6 @@ function module.init(path)
   workspaces.init(path, os.time())
 end
 
-
---- Move a workspace from one directory to another
---- @param src string current workspace directory
---- @param target string new workspace directory
-function module.move(src, target)
-  workspaces.move(src, target)
-end
-
 --- Get the directory of the currently open workspace
 --- @return string? path to directory of open workspace or `nil`
 function module.get_current_workspace()
