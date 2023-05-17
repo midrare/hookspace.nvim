@@ -100,6 +100,39 @@ function M.rename(rootdir, name)
   workspaces.write_metadata(rootdir, metadata)
 end
 
+local function _cmd_open(tbl)
+  if tbl and tbl.fargs then
+    for _, rootdir in ipairs(tbl.fargs) do
+      if rootdir then
+        M.open(rootdir)
+        break
+      end
+    end
+  end
+end
+
+
+local function _cmd_show_info(_)
+  local rootdir = workspaces.get_root_dir()
+  if not rootdir then
+    print("No workspace open")
+    return
+  end
+
+  local metadata = workspaces.read_metadata(rootdir)
+  print(vim.inspect(metadata))
+end
+
+
+local function _cmd_rename(tbl)
+  local rootdir = workspaces.get_root_dir()
+  if tbl and tbl.args and rootdir then
+    local name = table.concat(tbl.args, " ")
+    M.rename(rootdir, name)
+  end
+end
+
+
 --- Prepare hookspace for use
 ---@param opts useropts options
 function M.setup(opts)
@@ -133,16 +166,7 @@ function M.setup(opts)
     force = true,
     nargs = 0,
   })
-  vim.api.nvim_create_user_command("HookspaceOpen", function(tbl)
-    if tbl and tbl.fargs then
-      for _, rootdir in ipairs(tbl.fargs) do
-        if rootdir then
-          M.open(rootdir)
-          break
-        end
-      end
-    end
-  end, {
+  vim.api.nvim_create_user_command("HookspaceOpen", _cmd_open, {
     desc = "open a workspace",
     force = true,
     nargs = 1,
@@ -155,28 +179,13 @@ function M.setup(opts)
     force = true,
     nargs = 0,
   })
-  vim.api.nvim_create_user_command("HookspaceInfo", function(_)
-    local rootdir = workspaces.get_root_dir()
-    if not rootdir then
-      print("No workspace open")
-      return
-    end
-
-    local metadata = workspaces.read_metadata(rootdir)
-    print(vim.inspect(metadata))
-  end, {
+  vim.api.nvim_create_user_command("HookspaceInfo", _cmd_show_info, {
     desc = "show workspace info",
     force = true,
     nargs = 0,
   })
 
-  vim.api.nvim_create_user_command("HookspaceRename", function(tbl)
-    local rootdir = workspaces.get_root_dir()
-    if tbl and tbl.args and rootdir then
-      local name = table.concat(tbl.args, " ")
-      M.rename(rootdir, name)
-    end
-  end, {
+  vim.api.nvim_create_user_command("HookspaceRename", _cmd_rename, {
     desc = "rename workspace",
     force = true,
     nargs = 1,
