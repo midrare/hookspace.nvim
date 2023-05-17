@@ -34,7 +34,7 @@ local function _get_machine_id()
     return mach_id
   end
 
-  local file = consts.plugindir .. paths.sep() .. "machine_id.txt"
+  local file = consts.plugin_dir .. paths.sep() .. "machine_id.txt"
   mach_id = files.read_file(file)
   mach_id = mach_id and _str_strip(mach_id) or nil
   if mach_id then
@@ -56,9 +56,9 @@ end
 local function _workspace_paths(rootdir)
   return {
     rootdir = rootdir,
-    datadir = rootdir .. paths.sep() .. consts.data_dirname,
-    userdir = rootdir .. paths.sep() .. consts.data_dirname .. paths.sep() .. _userdir_name(),
-    metafile = rootdir .. paths.sep() .. consts.data_dirname .. paths.sep() .. consts.metadata_filename,
+    datadir = rootdir .. paths.sep() .. consts.workspace_dirname,
+    userdir = rootdir .. paths.sep() .. consts.workspace_dirname .. paths.sep() .. _userdir_name(),
+    metafile = rootdir .. paths.sep() .. consts.workspace_dirname .. paths.sep() .. consts.metadata_filename,
   }
 end
 
