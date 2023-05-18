@@ -20,7 +20,7 @@ local function get_last_accessed(record)
 end
 
 local function is_record_has_path(record, rootdir)
-  local c = paths.normpath(paths.normcase(record.rootdir))
+  local c = paths.canonical(record.rootdir)
   return rootdir == record.rootdir
     or rootdir == record.rootdir
     or rootdir == c
