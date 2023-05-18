@@ -1,9 +1,11 @@
 ---@meta _
 
 ---@class workspace
+---@field name string display name for workspace
+---@field created integer creation timestamp in epoch secs
 ---@field rootdir string root dir of workspace
----@field datadir string where global workspace-specific files are stored
----@field localdir string where local workspace-specific data files are be stored
+---@field localdir string where local workspace-specific files are be stored
+---@field globaldir string where global workspace-specific files are stored
 
 ---@alias hook fun(workspace: workspace): nil|boolean
 
@@ -17,4 +19,3 @@
 ---@field name string workspace display name
 ---@field last_accessed integer timestamp of last access
 ---@field rootdir string path to workspace root dir
----@field datadir string path to workspace data dir
