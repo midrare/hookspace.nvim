@@ -103,6 +103,8 @@ local function run_hooks(hooks, workspace)
   assert(workspace, "expected workspace")
 
   if type(hooks) == "table" then
+    hooks = vim.tbl_extend("force", {}, hooks)
+    arrays.canonicalize(hooks)
     for _, hook in ipairs(hooks) do
       run_hooks(hook, workspace)
     end
