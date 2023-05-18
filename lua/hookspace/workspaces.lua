@@ -19,7 +19,7 @@ local function _to_lines(s)
 
   while s and #s > 0 do
     local eol, _ = s:find("\n", 1, true)
-    local line = eol and s:sub(1, eol)
+    local line = eol and s:sub(1, eol) or s
     s = eol and s:sub(eol + 1) or ""
 
     line = line:gsub("[%s\r\n]+$", "")
