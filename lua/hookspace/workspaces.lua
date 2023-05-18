@@ -3,88 +3,65 @@ local M = {}
 local arrays = require("hookspace.luamisc.arrays")
 local files = require("hookspace.luamisc.files")
 local paths = require("hookspace.luamisc.paths")
-local platform = require("hookspace.luamisc.platform")
-local sha2 = require("hookspace.luamisc.sha2")
+local strings = require("hookspace.luamisc.strings")
+local tables = require("hookspace.luamisc.tables")
 local history = require("hookspace.history")
 local notify = require("hookspace.notify")
 local consts = require("hookspace.consts")
 local useropts = require("hookspace.useropts")
 
 local current_rootdir = nil
-local machine_id_len = 32
-local workspace_id_len = 32
+local workspace_id_len = 16
 
-local function _to_lines(s)
-  local lines = {}
+local function _get_file_uid(filename)
+  local n = files.inode(filename)
+    or files.file_id(filename)
+    or files.created(filename)
+    or files.modified(filename)
+  return (n and strings.itoa(n)) or nil
+end
 
-  while s and #s > 0 do
-    local eol, _ = s:find("\n", 1, true)
-    local line = eol and s:sub(1, eol) or s
-    s = eol and s:sub(eol + 1) or ""
+local function _workspace_info(rootdir, create)
+  create = create and true or false
+  local stamp = rootdir
+    .. paths.sep()
+    .. consts.subdir
+    .. paths.sep()
+    .. ".instance"
 
-    line = line:gsub("[%s\r\n]+$", "")
-    table.insert(lines, line)
+  if create and vim.fn.filereadable(stamp) <= 0 then
+    files.write_file(stamp)
   end
 
-  return lines
-end
-
-local function _str_strip(s)
-  return s:gsub("^%s+", ""):gsub("%s+$", "")
-end
-
-local function _random_string(len)
-  local chars = "abcdefghijklmnopqrstuvwxyz"
-    .. "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    .. "1234567890"
-  local result = ""
-  for _ = 1, len do
-    local ch_idx = math.random(1, #chars)
-    result = result .. chars:sub(ch_idx, 1)
-  end
-  return result
-end
-
-local function _get_machine_id()
-  local mach_id = platform.machine_id()
-  if mach_id then
-    return mach_id
-  end
-
-  local file = consts.plugin_dir .. paths.sep() .. "machine_id.txt"
-  mach_id = files.read_file(file)
-  mach_id = mach_id and _str_strip(mach_id) or nil
-  if mach_id then
-    return mach_id
-  end
-
-  mach_id = _random_string(machine_id_len)
-  files.write_file(file, mach_id)
-
-  return mach_id
-end
-
-local function _userdir_name()
-  local mach_id = _get_machine_id()
-  local user_dir = tostring(sha2.md5(mach_id)):gsub("[^a-zA-Z0-9]", "")
-  return user_dir .. ".user" -- suffix so gitignore can auto-detect
-end
-
-local function _workspace_paths(rootdir)
-  return {
+  local info = {
     rootdir = rootdir,
-    datadir = rootdir .. paths.sep() .. consts.workspace_dirname,
-    userdir = rootdir
-      .. paths.sep()
-      .. consts.workspace_dirname
-      .. paths.sep()
-      .. _userdir_name(),
+    globaldir = rootdir .. paths.sep() .. consts.subdir,
+    localdir = nil,
     metafile = rootdir
       .. paths.sep()
-      .. consts.workspace_dirname
+      .. consts.subdir
       .. paths.sep()
-      .. consts.metadata_filename,
+      .. consts.metafile,
+    instance = _get_file_uid(stamp),
   }
+
+  local meta = files.read_json(info.metafile) or {}
+  if create and not meta.id then
+    meta.id = strings.random(workspace_id_len)
+    files.write_json(info.metafile, meta)
+  end
+
+  tables.merge(meta, info)
+
+  if info.id and info.instance then
+    info.localdir = consts.datadir
+    .. paths.sep()
+    .. info.id .. ".wkspc"
+    .. paths.sep()
+    .. info.instance .. ".inst"
+  end
+
+  return info
 end
 
 ---@param hooks string|hook|hook[]
@@ -127,7 +104,7 @@ end
 
 local function update_ignorefile(ignorefile, lines)
   local data = files.read_file(ignorefile) or nil
-  local lines_ = data and _to_lines(data) or {}
+  local lines_ = data and strings.lines(data) or {}
 
   arrays.extend(lines_, lines)
   arrays.uniqify(lines_)
@@ -142,28 +119,25 @@ function M.init(rootdir, timestamp)
   assert(timestamp, "expected timestamp")
   rootdir = paths.canonical(rootdir)
 
-  local workpaths = _workspace_paths(rootdir)
+  local info = _workspace_info(rootdir, true)
 
   local metadata = M.read_metadata(rootdir) or {}
-  metadata.name = metadata.name
-    or paths.basename(paths.normpath(rootdir))
-    or "Unnamed"
+  metadata.name = metadata.name or paths.basename(rootdir) or "Unnamed"
   metadata.created = metadata.created or timestamp
-  metadata.id = _random_string(workspace_id_len)
 
-  files.write_json(workpaths.metafile, metadata)
-  files.write_file(workpaths.datadir .. paths.sep() .. ".notags")
-  files.write_file(workpaths.datadir .. paths.sep() .. ".ignore", "*")
-  files.write_file(workpaths.datadir .. paths.sep() .. ".tokeignore", "*")
+  files.write_json(info.metafile, metadata)
+  files.write_file(info.globaldir .. paths.sep() .. ".notags")
+  files.write_file(info.globaldir .. paths.sep() .. ".ignore", "*")
+  files.write_file(info.globaldir .. paths.sep() .. ".tokeignore", "*")
 
   update_ignorefile(
-    workpaths.datadir .. paths.sep() .. ".gitignore",
+    info.globaldir .. paths.sep() .. ".gitignore",
     { "/*.user", "/Session.vim", "/Before.vim" }
   )
 
-  files.makedirs(workpaths.datadir)
-  files.makedirs(workpaths.userdir)
-  run_hooks(useropts.on_init, workpaths)
+  files.makedirs(info.globaldir)
+  files.makedirs(info.localdir)
+  run_hooks(useropts.on_init, info)
   history.update(rootdir, timestamp)
 end
 
@@ -175,17 +149,17 @@ function M.open(rootdir, timestamp)
   assert(not current_rootdir, "another workspace is already open")
 
   rootdir = paths.canonical(rootdir)
-  local workpaths = _workspace_paths(rootdir)
-  if vim.fn.isdirectory(workpaths.datadir) <= 0 then
-    notify.error(
-      'failed to open non-existent workspace "' .. workpaths.datadir .. '"'
-    )
-    return
+  local info = _workspace_info(rootdir)
+  if vim.fn.isdirectory(info.globaldir) <= 0 then
+    notify.error('Failed to open non-existent "' .. rootdir .. '"')
+    return nil
   end
 
-  files.makedirs(workpaths.datadir)
-  files.makedirs(workpaths.userdir)
-  run_hooks(useropts.on_open, workpaths)
+  info = _workspace_info(rootdir, true)
+
+  files.makedirs(info.globaldir)
+  files.makedirs(info.localdir)
+  run_hooks(useropts.on_open, info)
   current_rootdir = rootdir
   history.update(rootdir, timestamp)
 end
@@ -195,10 +169,10 @@ function M.close(timestamp)
   assert(timestamp, "expected timestamp")
   assert(current_rootdir, "cannot close non-open workspace")
 
-  local workpaths = _workspace_paths(current_rootdir)
+  local workpaths = _workspace_info(current_rootdir, true)
 
-  files.makedirs(workpaths.datadir)
-  files.makedirs(workpaths.userdir)
+  files.makedirs(workpaths.globaldir)
+  files.makedirs(workpaths.localdir)
   run_hooks(useropts.on_close, workpaths)
   history.update(current_rootdir, timestamp)
   current_rootdir = nil
@@ -210,26 +184,34 @@ function M.is_open()
 end
 
 ---@return string? dir root dir of currently open workspace
-function M.get_root_dir()
+function M.root_dir()
   return current_rootdir
 end
 
 ---@param rootdir? string workspace root dir
----@return string? datadir workspace data dir
-function M.get_data_dir(rootdir)
+---@return string? globaldir workspace global dir
+function M.global_dir(rootdir)
   rootdir = rootdir or current_rootdir
   if not rootdir then
     return nil
   end
-  return _workspace_paths(rootdir).datadir
+  return _workspace_info(rootdir).globaldir
+end
+
+function M.local_dir(rootdir)
+  rootdir = rootdir or current_rootdir
+  if not rootdir then
+    return nil
+  end
+  return _workspace_info(rootdir).localdir
 end
 
 ---@param rootdir string path to root of workspace
 ---@return boolean is_workspace true if is root dir of a workspace
 function M.is_workspace(rootdir)
   assert(type(rootdir) == "string", "workspace path must be of type string")
-  local workpaths = _workspace_paths(rootdir)
-  return vim.fn.isdirectory(workpaths.datadir) == 1
+  local workpaths = _workspace_info(rootdir)
+  return vim.fn.isdirectory(workpaths.globaldir) == 1
 end
 
 ---@param rootdir? string path to root of workspace
@@ -239,8 +221,7 @@ function M.read_metadata(rootdir)
   if not rootdir then
     return nil
   end
-  local workpaths = _workspace_paths(rootdir)
-  return files.read_json(workpaths.metafile)
+  return _workspace_info(rootdir)
 end
 
 ---@param rootdir? string path to root of workspace
@@ -248,7 +229,7 @@ end
 function M.write_metadata(rootdir, metadata)
   rootdir = rootdir or current_rootdir
   assert(rootdir, "expected root dir or already-opened root dir")
-  local workpaths = _workspace_paths(rootdir)
+  local workpaths = _workspace_info(rootdir)
   files.write_json(workpaths.metafile, metadata)
 end
 

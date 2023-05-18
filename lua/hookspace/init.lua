@@ -46,7 +46,7 @@ end
 --- Get the directory of the currently open workspace
 --- @return string? path to directory of open workspace or `nil`
 function M.get_current_workspace()
-  return workspaces.get_root_dir()
+  return workspaces.root_dir()
 end
 
 --- Get history of recently-accessed workspaces
@@ -109,7 +109,7 @@ local function _cmd_open(tbl)
 end
 
 local function _cmd_show_info(_)
-  local rootdir = workspaces.get_root_dir()
+  local rootdir = workspaces.root_dir()
   if not rootdir then
     print("No workspace open")
     return
@@ -120,7 +120,7 @@ local function _cmd_show_info(_)
 end
 
 local function _cmd_rename(tbl)
-  local rootdir = workspaces.get_root_dir()
+  local rootdir = workspaces.root_dir()
   if tbl and tbl.args and rootdir then
     local name = table.concat(tbl.args, " ")
     M.rename(rootdir, name)

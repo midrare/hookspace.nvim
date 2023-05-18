@@ -30,8 +30,8 @@ local function read_env_file(workspace, filename)
   end
   local env = vim.fn.json_decode(plaintext)
   tbl_sub_all(env, "{rootdir}", workspace.rootdir)
-  tbl_sub_all(env, "{datadir}", workspace.datadir)
-  tbl_sub_all(env, "{userdir}", workspace.userdir)
+  tbl_sub_all(env, "{globaldir}", workspace.globaldir)
+  tbl_sub_all(env, "{localdir}", workspace.localdir)
   return env
 end
 
@@ -43,8 +43,8 @@ end
 function M.on_open(workspace)
   old_env = {}
 
-  local global_file = workspace.datadir .. sep .. env_filename
-  local user_file = workspace.userdir .. sep .. env_filename
+  local global_file = workspace.globaldir .. sep .. env_filename
+  local local_file = workspace.localdir .. sep .. env_filename
 
   if vim.fn.filereadable(global_file) >= 1 then
     local global_env = {}
@@ -52,8 +52,8 @@ function M.on_open(workspace)
       global_env = read_env_file(workspace, global_file) or {}
     end
 
-    local user_env = read_env_file(workspace, user_file) or {}
-    local new_env = vim.tbl_deep_extend("force", global_env, user_env)
+    local local_env = read_env_file(workspace, local_file) or {}
+    local new_env = vim.tbl_deep_extend("force", global_env, local_env)
 
     for name, value in pairs(new_env) do
       if is_var_name_sane(name) then

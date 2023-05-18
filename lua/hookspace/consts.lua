@@ -3,9 +3,10 @@ local M = {}
 local sep = vim.fn.has("win32") > 0 and "\\" or "/"
 
 M.plugin = "hookspace"
-M.plugin_dir = vim.fn.stdpath("data") .. sep .. "hookspace"
+M.datadir = vim.fn.stdpath("data") .. sep .. "hookspace"
+M.historyfile = vim.fn.stdpath("data") .. sep .. "hookspace" .. sep .. "workspaces.json"
 
-M.workspace_dirname = ".hookspace"
-M.metadata_filename = "workspace.json"
+M.subdir = ".hookspace"
+M.metafile = "workspace.json"
 
 return M

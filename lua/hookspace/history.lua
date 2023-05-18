@@ -4,11 +4,7 @@ local arrays = require("hookspace.luamisc.arrays")
 local files = require("hookspace.luamisc.files")
 local paths = require("hookspace.luamisc.paths")
 
-local records_path = vim.fn.stdpath("data")
-  .. paths.sep()
-  .. "hookspace"
-  .. paths.sep()
-  .. "workspaces.json"
+local consts = require("hookspace.consts")
 
 local function is_record_valid(record)
   return record.rootdir
@@ -51,8 +47,8 @@ end
 local function _read_records()
   local records = {}
 
-  if vim.fn.filereadable(records_path) == 1 then
-    records = files.read_json(records_path) or records
+  if vim.fn.filereadable(consts.historyfile) == 1 then
+    records = files.read_json(consts.historyfile) or records
     table.sort(records, function(a, b)
       return cmp_last_accessed(a, b) > 0
     end)
@@ -68,7 +64,7 @@ local function write_records(records)
   table.sort(records, function(a, b)
     return cmp_last_accessed(a, b) > 0
   end)
-  files.write_json(records_path, records)
+  files.write_json(consts.historyfile, records)
 end
 
 ---@return record[] records workspace access records

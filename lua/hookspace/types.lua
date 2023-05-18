@@ -1,9 +1,9 @@
 ---@meta _
 
 ---@class workspace
----@field datadir string where workspace-specific files are stored
 ---@field rootdir string root dir of workspace
----@field userdir string where user-specific data files should be stored
+---@field datadir string where global workspace-specific files are stored
+---@field localdir string where local workspace-specific data files are be stored
 
 ---@alias hook fun(workspace: workspace): nil|boolean
 
