@@ -11,6 +11,8 @@ local consts = require("hookspace.consts")
 local useropts = require("hookspace.useropts")
 
 local current_rootdir = nil
+local machine_id_len = 32
+local workspace_id_len = 32
 
 local function _to_lines(s)
   local lines = {}
@@ -56,7 +58,7 @@ local function _get_machine_id()
     return mach_id
   end
 
-  mach_id = _random_string(32)
+  mach_id = _random_string(machine_id_len)
   files.write_file(file, mach_id)
 
   return mach_id
@@ -147,6 +149,7 @@ function M.init(rootdir, timestamp)
     or paths.basename(paths.normpath(rootdir))
     or "Unnamed"
   metadata.created = metadata.created or timestamp
+  metadata.id = _random_string(workspace_id_len)
 
   files.write_json(workpaths.metafile, metadata)
   files.write_file(workpaths.datadir .. paths.sep() .. ".notags")
