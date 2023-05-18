@@ -21,6 +21,26 @@ local function _get_file_uid(filename)
   return (n and strings.itoa(n)) or nil
 end
 
+local function set_lazy_attrs(tbl, attrs)
+  return setmetatable(tbl, {
+    __index = function(e, key)
+      local raw = rawget(e, key)
+      if raw ~= nil then
+        return raw
+      end
+
+      local f = rawget(attrs, key)
+      if f then
+        local value = f(e)
+        rawset(e, key, value)
+        return value
+      end
+
+      return nil
+    end,
+  })
+end
+
 local function _workspace_info(rootdir, create)
   create = create and true or false
   local stamp = rootdir
@@ -52,14 +72,20 @@ local function _workspace_info(rootdir, create)
 
   tables.merge(meta, info)
 
-  if info.id and vim.fn.filereadable(stamp) > 0 then
-    local instance = _get_file_uid(stamp)
-    info.localdir = consts.datadir
-    .. paths.sep()
-    .. info.id .. ".wkspc"
-    .. paths.sep()
-    .. instance .. ".inst"
-  end
+  set_lazy_attrs(info, {
+    localdir = function()
+      if not info.id or vim.fn.filereadable(stamp) <= 0 then
+        return nil
+      end
+
+      local instance = _get_file_uid(stamp)
+      return consts.datadir
+        .. paths.sep()
+        .. info.id .. ".wkspc"
+        .. paths.sep()
+        .. instance .. ".inst"
+    end
+  })
 
   return info
 end
@@ -169,11 +195,11 @@ function M.close(timestamp)
   assert(timestamp, "expected timestamp")
   assert(current_rootdir, "cannot close non-open workspace")
 
-  local workpaths = _workspace_info(current_rootdir, true)
+  local info = _workspace_info(current_rootdir, true)
 
-  files.makedirs(workpaths.globaldir)
-  files.makedirs(workpaths.localdir)
-  run_hooks(useropts.on_close, workpaths)
+  files.makedirs(info.globaldir)
+  files.makedirs(info.localdir)
+  run_hooks(useropts.on_close, info)
   history.update(current_rootdir, timestamp)
   current_rootdir = nil
 end
@@ -210,8 +236,8 @@ end
 ---@return boolean is_workspace true if is root dir of a workspace
 function M.is_workspace(rootdir)
   assert(type(rootdir) == "string", "workspace path must be of type string")
-  local workpaths = _workspace_info(rootdir)
-  return vim.fn.isdirectory(workpaths.globaldir) == 1
+  local info = _workspace_info(rootdir)
+  return vim.fn.isdirectory(info.globaldir) == 1
 end
 
 ---@param rootdir? string path to root of workspace
@@ -229,8 +255,8 @@ end
 function M.write_metadata(rootdir, metadata)
   rootdir = rootdir or current_rootdir
   assert(rootdir, "expected root dir or already-opened root dir")
-  local workpaths = _workspace_info(rootdir)
-  files.write_json(workpaths.metafile, metadata)
+  local info = _workspace_info(rootdir)
+  files.write_json(info.metafile, metadata)
 end
 
 return M
