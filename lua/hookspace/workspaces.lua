@@ -42,7 +42,6 @@ local function _workspace_info(rootdir, create)
       .. consts.subdir
       .. paths.sep()
       .. consts.metafile,
-    instance = _get_file_uid(stamp),
   }
 
   local meta = files.read_json(info.metafile) or {}
@@ -53,12 +52,13 @@ local function _workspace_info(rootdir, create)
 
   tables.merge(meta, info)
 
-  if info.id and info.instance then
+  if info.id and vim.fn.filereadable(stamp) > 0 then
+    local instance = _get_file_uid(stamp)
     info.localdir = consts.datadir
     .. paths.sep()
     .. info.id .. ".wkspc"
     .. paths.sep()
-    .. info.instance .. ".inst"
+    .. instance .. ".inst"
   end
 
   return info
