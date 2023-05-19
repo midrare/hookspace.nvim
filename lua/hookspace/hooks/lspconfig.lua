@@ -16,7 +16,7 @@ set up your LSP servers, call the handler provided by the hook.
 
 local M = {}
 
-local default_opts = { use_global = false, use_local = true }
+local default_opts = { use_public = false, use_local = true }
 ---@diagnostic disable-next-line: unused-local
 local user_opts = vim.deepcopy(default_opts)
 
@@ -70,24 +70,24 @@ end
 
 local function replace_templates(o, workspace)
   recursive_sub(o, '{rootdir}', workspace.rootdir())
-  recursive_sub(o, '{globaldir}', workspace.globaldir())
+  recursive_sub(o, '{datadir}', workspace.datadir())
   recursive_sub(o, '{localdir}', workspace.localdir())
 end
 
 local function read_configs(filename, workspace)
   local config = {}
 
-  local globalfile = workspace.globaldir() .. '/' .. filename
-  local localfile = workspace.localdir() .. '/' .. filename
+  local public_file = workspace.datadir() .. '/' .. filename
+  local local_file = workspace.localdir() .. '/' .. filename
 
-  if user_opts.use_global then
-    local o = read_json(globalfile) or {}
+  if user_opts.use_public then
+    local o = read_json(public_file) or {}
     replace_templates(o, workspace)
     vim.tbl_deep_extend("force", config, o)
   end
 
   if user_opts.use_local then
-    local o = read_json(localfile) or {}
+    local o = read_json(local_file) or {}
     replace_templates(o, workspace)
     vim.tbl_deep_extend("force", config, o)
   end

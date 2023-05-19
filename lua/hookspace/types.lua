@@ -5,7 +5,7 @@
 ---@field created integer creation timestamp in epoch secs
 ---@field rootdir fun(): string root dir of workspace
 ---@field localdir fun(): string where local workspace-specific files are be stored
----@field globaldir fun(): string where global workspace-specific files are stored
+---@field datadir fun(): string path to ".hookspace" subdir
 ---@field metafile fun(): string path to metadata file
 
 ---@alias hook fun(workspace: workspace): nil|boolean

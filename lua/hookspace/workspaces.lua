@@ -39,7 +39,7 @@ local function get_workspace_paths(rootdir, create)
 
   local master = {
     rootdir = rootdir,
-    globaldir = rootdir
+    datadir = rootdir
       .. paths.sep()
       .. consts.subdir,
     localdir = nil,
@@ -54,8 +54,8 @@ local function get_workspace_paths(rootdir, create)
     rootdir = function()
       return master.rootdir
     end,
-    globaldir = function()
-      return master.globaldir
+    datadir = function()
+      return master.datadir
     end,
     metafile = function()
       return master.metafile
@@ -141,16 +141,16 @@ function M.init(rootdir, timestamp)
   metadata.created = metadata.created or timestamp
 
   files.write_json(workpaths.metafile(), metadata)
-  files.write_file(workpaths.globaldir() .. paths.sep() .. ".notags")
-  files.write_file(workpaths.globaldir() .. paths.sep() .. ".ignore", "*")
-  files.write_file(workpaths.globaldir() .. paths.sep() .. ".tokeignore", "*")
+  files.write_file(workpaths.datadir() .. paths.sep() .. ".notags")
+  files.write_file(workpaths.datadir() .. paths.sep() .. ".ignore", "*")
+  files.write_file(workpaths.datadir() .. paths.sep() .. ".tokeignore", "*")
 
   update_ignorefile(
-    workpaths.globaldir() .. paths.sep() .. ".gitignore",
+    workpaths.datadir() .. paths.sep() .. ".gitignore",
     {"/.instance"}
   )
 
-  files.makedirs(workpaths.globaldir())
+  files.makedirs(workpaths.datadir())
   files.makedirs(workpaths.localdir())
   history.touch(rootdir, timestamp)
   run_hooks(useropts.on_init, workpaths)
@@ -165,7 +165,7 @@ function M.open(rootdir, timestamp)
 
   rootdir = paths.canonical(rootdir)
   local workspace = get_workspace_paths(rootdir)
-  if vim.fn.isdirectory(workspace.globaldir()) <= 0 then
+  if vim.fn.isdirectory(workspace.datadir()) <= 0 then
     notify.error('No workspace to open at "' .. rootdir .. '"')
     return nil
   end
@@ -175,7 +175,7 @@ function M.open(rootdir, timestamp)
   -- set current *before* running hooks!
   current = workspace
 
-  files.makedirs(workspace.globaldir())
+  files.makedirs(workspace.datadir())
   files.makedirs(workspace.localdir())
   history.touch(rootdir, timestamp)
   run_hooks(useropts.on_open, workspace)
@@ -186,7 +186,7 @@ function M.close(timestamp)
   assert(timestamp, "expected timestamp")
   assert(current, "cannot close non-open workspace")
 
-  files.makedirs(current.globaldir())
+  files.makedirs(current.datadir())
   files.makedirs(current.localdir())
   history.touch(current.rootdir(), timestamp)
   run_hooks(useropts.on_close, current)
@@ -208,12 +208,12 @@ function M.root_dir()
   return current.rootdir()
 end
 
----@return string? globaldir workspace global dir
-function M.global_dir()
+---@return string? datadir workspace data dir
+function M.data_dir()
   if not current then
     return nil
   end
-  return current.globaldir()
+  return current.datadir()
 end
 
 ---@return string? localdir workspace local dir
@@ -229,7 +229,7 @@ end
 function M.is_workspace(rootdir)
   assert(type(rootdir) == "string", "workspace path must be of type string")
   local info = get_workspace_paths(rootdir)
-  return vim.fn.isdirectory(info.globaldir()) == 1
+  return vim.fn.isdirectory(info.datadir()) == 1
 end
 
 ---@param rootdir? string path to root of workspace

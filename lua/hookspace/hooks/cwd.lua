@@ -4,7 +4,7 @@ local default_opts = {}
 ---@diagnostic disable-next-line: unused-local
 local user_opts = vim.deepcopy(default_opts)
 
-local old_global_cwd = nil
+local old_cwd = nil
 
 function M.setup(opts)
   ---@diagnostic disable-next-line: unused-local
@@ -12,14 +12,14 @@ function M.setup(opts)
 end
 
 function M.on_open(workspace)
-  old_global_cwd = vim.fn.getcwd(-1, -1)
+  old_cwd = vim.fn.getcwd(-1, -1)
   vim.api.nvim_set_current_dir(workspace.rootdir())
 end
 
 ---@diagnostic disable-next-line: unused-local
 function M.on_close(workspace)
-  vim.api.nvim_set_current_dir(old_global_cwd or "~")
-  old_global_cwd = nil
+  vim.api.nvim_set_current_dir(old_cwd or "~")
+  old_cwd = nil
 end
 
 return M
