@@ -69,8 +69,8 @@ function M.setup(opts)
 end
 
 function M.on_open(workspace)
-  local session = workspace.localdir .. path_sep .. "Session.vim"
-  local before = workspace.localdir .. path_sep .. "Before.vim"
+  local session = workspace.localdir() .. path_sep .. "Session.vim"
+  local before = workspace.localdir() .. path_sep .. "Before.vim"
 
   vim.fn.delete(before)
   write_session(before)
@@ -98,8 +98,8 @@ function M.on_open(workspace)
 end
 
 function M.on_close(workspace)
-  local session = workspace.localdir .. path_sep .. "Session.vim"
-  local before = workspace.localdir .. path_sep .. "Before.vim"
+  local session = workspace.localdir() .. path_sep .. "Session.vim"
+  local before = workspace.localdir() .. path_sep .. "Before.vim"
 
   write_session(session)
 

@@ -24,26 +24,6 @@ local function get_file_uid(filename)
   return (n and strings.itoa(n)) or nil
 end
 
-local function set_lazy_attrs(tbl, attrs)
-  return setmetatable(tbl, {
-    __index = function(e, key)
-      local raw = rawget(e, key)
-      if raw ~= nil then
-        return raw
-      end
-
-      local f = rawget(attrs, key)
-      if f then
-        local value = f(e)
-        rawset(e, key, value)
-        return value
-      end
-
-      return nil
-    end,
-  })
-end
-
 local function get_workspace_paths(rootdir, create)
   create = create ~= false
   rootdir = paths.canonical(rootdir)
@@ -57,7 +37,7 @@ local function get_workspace_paths(rootdir, create)
     files.write_file(stamp)
   end
 
-  local workpaths = {
+  local master = {
     rootdir = rootdir,
     globaldir = rootdir
       .. paths.sep()
@@ -70,17 +50,28 @@ local function get_workspace_paths(rootdir, create)
       .. consts.metafile,
   }
 
-  set_lazy_attrs(workpaths, {
+  local workpaths = {
+    rootdir = function()
+      return master.rootdir
+    end,
+    globaldir = function()
+      return master.globaldir
+    end,
+    metafile = function()
+      return master.metafile
+    end,
     localdir = function()
+      if master.localdir then
+        return master.localdir
+      end
       local instance = get_file_uid(stamp)
       if not instance then
         return nil
       end
-      return consts.datadir
-        .. paths.sep()
-        .. instance .. ".wkspc"
+      master.localdir = consts.datadir .. paths.sep() .. instance .. ".wkspc"
+      return master.localdir
     end
-  })
+  }
 
   return workpaths
 end
@@ -149,18 +140,18 @@ function M.init(rootdir, timestamp)
   metadata.name = metadata.name or paths.basename(rootdir) or "Unnamed"
   metadata.created = metadata.created or timestamp
 
-  files.write_json(workpaths.metafile, metadata)
-  files.write_file(workpaths.globaldir .. paths.sep() .. ".notags")
-  files.write_file(workpaths.globaldir .. paths.sep() .. ".ignore", "*")
-  files.write_file(workpaths.globaldir .. paths.sep() .. ".tokeignore", "*")
+  files.write_json(workpaths.metafile(), metadata)
+  files.write_file(workpaths.globaldir() .. paths.sep() .. ".notags")
+  files.write_file(workpaths.globaldir() .. paths.sep() .. ".ignore", "*")
+  files.write_file(workpaths.globaldir() .. paths.sep() .. ".tokeignore", "*")
 
   update_ignorefile(
-    workpaths.globaldir .. paths.sep() .. ".gitignore",
+    workpaths.globaldir() .. paths.sep() .. ".gitignore",
     {"/.instance"}
   )
 
-  files.makedirs(workpaths.globaldir)
-  files.makedirs(workpaths.localdir)
+  files.makedirs(workpaths.globaldir())
+  files.makedirs(workpaths.localdir())
   history.touch(rootdir, timestamp)
   run_hooks(useropts.on_init, workpaths)
 end
@@ -174,18 +165,18 @@ function M.open(rootdir, timestamp)
 
   rootdir = paths.canonical(rootdir)
   local workspace = get_workspace_paths(rootdir)
-  if vim.fn.isdirectory(workspace.globaldir) <= 0 then
+  if vim.fn.isdirectory(workspace.globaldir()) <= 0 then
     notify.error('No workspace to open at "' .. rootdir .. '"')
     return nil
   end
 
-  tables.merge(files.read_json(workspace.metafile) or {}, workspace)
+  tables.merge(files.read_json(workspace.metafile()) or {}, workspace)
 
   -- set current *before* running hooks!
   current = workspace
 
-  files.makedirs(workspace.globaldir)
-  files.makedirs(workspace.localdir)
+  files.makedirs(workspace.globaldir())
+  files.makedirs(workspace.localdir())
   history.touch(rootdir, timestamp)
   run_hooks(useropts.on_open, workspace)
 end
@@ -195,9 +186,9 @@ function M.close(timestamp)
   assert(timestamp, "expected timestamp")
   assert(current, "cannot close non-open workspace")
 
-  files.makedirs(current.globaldir)
-  files.makedirs(current.localdir)
-  history.touch(current.rootdir, timestamp)
+  files.makedirs(current.globaldir())
+  files.makedirs(current.localdir())
+  history.touch(current.rootdir(), timestamp)
   run_hooks(useropts.on_close, current)
 
   -- unset current only *after* running hooks!
@@ -214,7 +205,7 @@ function M.root_dir()
   if not current then
     return nil
   end
-  return current.rootdir
+  return current.rootdir()
 end
 
 ---@return string? globaldir workspace global dir
@@ -222,7 +213,7 @@ function M.global_dir()
   if not current then
     return nil
   end
-  return current.globaldir
+  return current.globaldir()
 end
 
 ---@return string? localdir workspace local dir
@@ -230,7 +221,7 @@ function M.local_dir()
   if not current then
     return nil
   end
-  return current.localdir
+  return current.localdir()
 end
 
 ---@param rootdir string path to root of workspace
@@ -238,7 +229,7 @@ end
 function M.is_workspace(rootdir)
   assert(type(rootdir) == "string", "workspace path must be of type string")
   local info = get_workspace_paths(rootdir)
-  return vim.fn.isdirectory(info.globaldir) == 1
+  return vim.fn.isdirectory(info.globaldir()) == 1
 end
 
 ---@param rootdir? string path to root of workspace
@@ -250,7 +241,7 @@ function M.read_metadata(rootdir)
   end
 
   workspace = vim.deepcopy(workspace)
-  tables.merge(files.read_json(workspace.metafile) or {}, workspace)
+  tables.merge(files.read_json(workspace.metafile()) or {}, workspace)
 
   return workspace
 end
@@ -260,7 +251,7 @@ function M.write_metadata(workspace)
   workspace = workspace or current
   assert(workspace, "expected root dir or already-opened root dir")
   local meta = { name = workspace.name, created = workspace.created }
-  files.write_json(workspace.metafile, meta)
+  files.write_json(workspace.metafile(), meta)
 end
 
 return M

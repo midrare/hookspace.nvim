@@ -2,6 +2,7 @@ local M = {}
 
 local arrays = require("hookspace.luamisc.arrays")
 local paths = require("hookspace.luamisc.paths")
+local tables = require("hookspace.luamisc.tables")
 local history = require("hookspace.history")
 local useropts = require("hookspace.useropts")
 local notify = require("hookspace.notify")
@@ -113,6 +114,12 @@ local function _cmd_show_info(_)
   end
 
   local metadata = workspaces.read_metadata(rootdir)
+  tables.transform(metadata, function(val)
+    if type(val) == "function" then
+      val = val()
+    end
+    return val
+  end)
   print(vim.inspect(metadata))
 end
 
@@ -152,7 +159,7 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("HookspaceList", function(_)
     local rootdirs = M.read_history()
     arrays.transform(rootdirs, function(o)
-      return o.rootdir
+      return o.rootdir()
     end)
     print(vim.inspect(rootdirs))
   end, {

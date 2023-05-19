@@ -13,7 +13,7 @@ end
 
 function M.on_open(workspace)
   old_global_cwd = vim.fn.getcwd(-1, -1)
-  vim.api.nvim_set_current_dir(workspace.rootdir)
+  vim.api.nvim_set_current_dir(workspace.rootdir())
 end
 
 ---@diagnostic disable-next-line: unused-local

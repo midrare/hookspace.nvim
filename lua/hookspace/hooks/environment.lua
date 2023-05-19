@@ -29,9 +29,9 @@ local function read_env_file(workspace, filename)
     return nil
   end
   local env = vim.fn.json_decode(plaintext)
-  tbl_sub_all(env, "{rootdir}", workspace.rootdir)
-  tbl_sub_all(env, "{globaldir}", workspace.globaldir)
-  tbl_sub_all(env, "{localdir}", workspace.localdir)
+  tbl_sub_all(env, "{rootdir}", workspace.rootdir())
+  tbl_sub_all(env, "{globaldir}", workspace.globaldir())
+  tbl_sub_all(env, "{localdir}", workspace.localdir())
   return env
 end
 
@@ -43,8 +43,8 @@ end
 function M.on_open(workspace)
   old_env = {}
 
-  local global_file = workspace.globaldir .. sep .. env_filename
-  local local_file = workspace.localdir .. sep .. env_filename
+  local global_file = workspace.globaldir() .. sep .. env_filename
+  local local_file = workspace.localdir() .. sep .. env_filename
 
   if vim.fn.filereadable(global_file) >= 1 then
     local global_env = {}
