@@ -44,7 +44,7 @@ local function cmp_last_accessed(rec1, rec2)
   return 0
 end
 
-local function _read_records()
+local function read()
   local records = {}
 
   if vim.fn.filereadable(consts.historyfile) == 1 then
@@ -59,7 +59,7 @@ local function _read_records()
   return records
 end
 
-local function write_records(records)
+local function write(records)
   arrays.uniqify(records, get_last_accessed)
   table.sort(records, function(a, b)
     return cmp_last_accessed(a, b) > 0
@@ -69,12 +69,12 @@ end
 
 ---@return record[] records workspace access records
 function M.read_records()
-  return _read_records()
+  return read()
 end
 
 ---@return string[] rootdirs workspace root dirs
 function M.read_root_dirs()
-  local records = _read_records()
+  local records = read()
   arrays.transform(records, function(r)
     return r.rootdir
   end)
@@ -83,17 +83,17 @@ end
 
 ---@param rootdir string workspace root dir
 function M.delete(rootdir)
-  local records = _read_records()
+  local records = read()
   arrays.filter(records, function(r)
     return not is_record_has_path(r, rootdir)
   end)
-  write_records(records)
+  write(records)
 end
 
 ---@param src string old workspace root dir
 ---@param dest string new workspace root dir
 function M.move(src, dest)
-  local records = _read_records()
+  local records = read()
   arrays.filter(records, function(r)
     return is_record_has_path(r, src)
   end)
@@ -103,13 +103,13 @@ function M.move(src, dest)
     r.rootdir = canonical
   end)
 
-  write_records(records)
+  write(records)
 end
 
 ---@param rootdir string workspace root dir
 ---@param timestamp integer last access timestamp
-function M.update(rootdir, timestamp)
-  local records = _read_records()
+function M.update_timestamp(rootdir, timestamp)
+  local records = read()
 
   local is_found = false
   for _, record in ipairs(records) do
@@ -125,7 +125,7 @@ function M.update(rootdir, timestamp)
     table.insert(records, record)
   end
 
-  write_records(records)
+  write(records)
 end
 
 return M

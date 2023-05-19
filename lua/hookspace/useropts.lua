@@ -1,9 +1,15 @@
 local M = {}
 
-M.verbose = 1
-
+---@type nil|hook|hook[]
 M.on_init = {}
+
+---@type nil|hook|hook[]
 M.on_open = {}
+
+---@type nil|hook|hook[]
 M.on_close = {}
+
+---@type integer
+M.verbose = 1
 
 return M
