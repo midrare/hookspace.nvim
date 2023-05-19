@@ -1,18 +1,17 @@
 --[[                  How to use this hook
 ------------------------------------------------------------------
 
-All this hook does is look in $localdir/lspconfig.json and
+All this hook does is look in $localdir/lspsettings.json and
 and assign the resultant object to M.lsp_config.
 
 When you set up your LSP servers, call the handler provided by the
 hook. The handler takes the loaded config object and merges it
-with the existing config, then notifies the lsp server that the config
-has changed.
+with the existing client.config.settings.
 
-  require("lspconfig")[server_name].setup(conf)({
+  require("lspsettings")[server_name].setup(conf)({
     capabilities = vim.lsp.protocol.make_client_capabilities(),
     on_init = function(client, init_ret)
-      require("hookspace.hooks.lspconfig").server_init(client, init_ret)
+      require("hookspace.hooks.lspsettings").server_init(client, init_ret)
       return true
     end
   })
