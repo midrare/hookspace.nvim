@@ -48,10 +48,10 @@ A hook is a function with the signature: `function(workspace)`. `workspace` is a
 
 The members of the `workspace` object you want to pay attention to are the following.
 
-  - `workspace.rootdir` is a `string` pointing to the root dir of the workspace. For example, `C:/Users/You/Projects/hello_world`.
-  - `workspace.globaldir` is a `string` pointing to the global workspace-specific data dir. For example, `C:/Users/You/Projects/hello_world/.hookspace`.
+  - `workspace.rootdir()` is a `string` pointing to the root dir of the workspace. For example, `~/Projects/hello_world`.
+  - `workspace.globaldir()` is a `string` pointing to the global workspace-specific data dir. For example, `~/Projects/hello_world/.hookspace`.
     Files that are workspace-specific but not user-specific should go here. Any files put here should be safe to be checked into VCS.
-  - `workspace.localdir` is a `string` pointing to the local workspace-specific data dir. For example, `C:/Users/You/AppData/Local/nvim-data/hookspace/4KTy9GOUMwRYNewT.wkspc/cgwjRTcWKp.inst`.
+  - `workspace.localdir()` is a `string` pointing to the local workspace-specific data dir. For example, `$LOCALAPPDATA/nvim-data/hookspace/cgwjRTcWKp.wkspc`.
     Files that are workspace-specific and user-specific should go here. 
 
 `localdir` needs some explanation. `localdir` is directory on your local machine associated not with a workspace, but with a specific workspace instance (i.e. workspace's directory). If you take a workspace and copy it, each of the two workspaces will have its own unique `localdir` even though the contents of the workspace and even the workspace metadata files are identical. (Internally, `localdir` is calculated from `FileID` Windows and `inode` on NIX.) By storing its contents completely outside the workspace itself, `localdir` also prevents you from accidentially adding sensitive files to VCS. Moreover, a malicious repo can't pre-package a malware session or script in a `localdir`. If you're writing a hook that makes use of sensitive data or can run arbitrary code, you should use `localdir` exclusively.
@@ -63,7 +63,7 @@ local old_cwd = nil
 
 local function cwd_open(workspace)
     old_cwd = vim.fn.getcwd(-1, -1)
-    vim.api.nvim_set_current_dir(workspace.rootdir)
+    vim.api.nvim_set_current_dir(workspace.rootdir())
 end
 
 local function cwd_close(workspace)
