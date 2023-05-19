@@ -160,7 +160,7 @@ function M.init(rootdir, timestamp)
 
   update_ignorefile(
     info.globaldir .. paths.sep() .. ".gitignore",
-    { "/*.user", "/Session.vim", "/Before.vim" }
+    {".instance"}
   )
 
   files.makedirs(info.globaldir)
