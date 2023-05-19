@@ -152,7 +152,7 @@ function M.init(rootdir, timestamp)
 
   update_ignorefile(
     workpaths.globaldir .. paths.sep() .. ".gitignore",
-    {".instance"}
+    {"/.instance"}
   )
 
   files.makedirs(workpaths.globaldir)
