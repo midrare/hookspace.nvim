@@ -108,7 +108,7 @@ end
 
 ---@param rootdir string workspace root dir
 ---@param timestamp integer last access timestamp
-function M.update_timestamp(rootdir, timestamp)
+function M.touch(rootdir, timestamp)
   local records = read()
 
   local is_found = false

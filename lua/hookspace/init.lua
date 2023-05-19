@@ -59,16 +59,13 @@ end
 --- @param rootdir string path to workspace directory or `nil` for current workspace
 --- @return workspace? metadata workspace info
 function M.read_metadata(rootdir)
-  rootdir = rootdir and paths.canonical(rootdir) or nil
   return workspaces.read_metadata(rootdir)
 end
 
 --- Write metadata for a workspace
---- @param rootdir string path to workspace directory or `nil` for current workspace
 --- @param workspace workspace the metadata to write
-function M.write_metadata(rootdir, workspace)
-  rootdir = rootdir and paths.canonical(rootdir) or nil
-  workspaces.write_metadata(rootdir, workspace)
+function M.write_metadata(workspace)
+  workspaces.write_metadata(workspace)
 end
 
 --- Check if the directory contains a workspace
@@ -87,14 +84,14 @@ function M.rename(rootdir, name)
     return
   end
 
-  local metadata = workspaces.read_metadata(rootdir)
-  if not metadata then
+  local workspace = workspaces.read_metadata(rootdir)
+  if not workspace then
     notify.error("Workspace not found.")
     return
   end
 
-  metadata.name = name
-  workspaces.write_metadata(rootdir, metadata)
+  workspace.name = name
+  workspaces.write_metadata(workspace)
 end
 
 local function _cmd_open(tbl)
@@ -151,6 +148,7 @@ function M.setup(opts)
     nargs = 1,
     complete = "file",
   })
+
   vim.api.nvim_create_user_command("HookspaceList", function(_)
     local rootdirs = M.read_history()
     arrays.transform(rootdirs, function(o)
@@ -162,12 +160,14 @@ function M.setup(opts)
     force = true,
     nargs = 0,
   })
+
   vim.api.nvim_create_user_command("HookspaceOpen", _cmd_open, {
     desc = "open a workspace",
     force = true,
     nargs = 1,
     complete = "file",
   })
+
   vim.api.nvim_create_user_command("HookspaceClose", function(_)
     M.close()
   end, {
@@ -175,6 +175,7 @@ function M.setup(opts)
     force = true,
     nargs = 0,
   })
+
   vim.api.nvim_create_user_command("HookspaceInfo", _cmd_show_info, {
     desc = "show workspace info",
     force = true,

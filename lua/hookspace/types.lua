@@ -6,6 +6,7 @@
 ---@field rootdir string root dir of workspace
 ---@field localdir string where local workspace-specific files are be stored
 ---@field globaldir string where global workspace-specific files are stored
+---@field metafile string path to metadata file
 
 ---@alias hook fun(workspace: workspace): nil|boolean
 
