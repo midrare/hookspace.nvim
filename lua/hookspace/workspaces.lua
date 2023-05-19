@@ -17,21 +17,14 @@ local function get_file_uid(filename)
   if vim.fn.filereadable(filename) <= 0 then
     return nil
   end
-  local n = files.inode(filename)
-    or files.file_id(filename)
-    or files.created(filename)
-    or files.modified(filename)
+  local n = files.inode(filename) or files.file_id(filename) or files.created(filename) or files.modified(filename)
   return (n and strings.itoa(n)) or nil
 end
 
 local function get_workspace_paths(rootdir, create)
   create = create ~= false
   rootdir = paths.canonical(rootdir)
-  local stamp = rootdir
-    .. paths.sep()
-    .. consts.subdir
-    .. paths.sep()
-    .. ".instance"
+  local stamp = rootdir .. paths.sep() .. consts.subdir .. paths.sep() .. ".instance"
 
   if create and vim.fn.filereadable(stamp) <= 0 then
     files.write_file(stamp)
@@ -39,15 +32,9 @@ local function get_workspace_paths(rootdir, create)
 
   local master = {
     rootdir = rootdir,
-    datadir = rootdir
-      .. paths.sep()
-      .. consts.subdir,
+    datadir = rootdir .. paths.sep() .. consts.subdir,
     localdir = nil,
-    metafile = rootdir
-      .. paths.sep()
-      .. consts.subdir
-      .. paths.sep()
-      .. consts.metafile,
+    metafile = rootdir .. paths.sep() .. consts.subdir .. paths.sep() .. consts.metafile,
   }
 
   local workpaths = {
@@ -70,7 +57,7 @@ local function get_workspace_paths(rootdir, create)
       end
       master.localdir = consts.datadir .. paths.sep() .. instance .. ".wkspc"
       return master.localdir
-    end
+    end,
   }
 
   return workpaths
@@ -86,15 +73,11 @@ local function update_ignorefile(ignorefile, lines)
   files.write_file(ignorefile, table.concat(lines_, "\n"))
 end
 
-
 ---@param hooks string|hook|hook[]
 ---@param workspace workspace
 local function run_hooks(hooks, workspace)
   assert(
-    hooks == nil
-      or type(hooks) == "table"
-      or type(hooks) == "function"
-      or type(hooks) == "string",
+    hooks == nil or type(hooks) == "table" or type(hooks) == "function" or type(hooks) == "string",
     "hooks must be of type nil, table, function, or string"
   )
   assert(workspace, "expected workspace")
@@ -145,10 +128,7 @@ function M.init(rootdir, timestamp)
   files.write_file(workpaths.datadir() .. paths.sep() .. ".ignore", "*")
   files.write_file(workpaths.datadir() .. paths.sep() .. ".tokeignore", "*")
 
-  update_ignorefile(
-    workpaths.datadir() .. paths.sep() .. ".gitignore",
-    {"/.instance"}
-  )
+  update_ignorefile(workpaths.datadir() .. paths.sep() .. ".gitignore", { "/.instance" })
 
   files.makedirs(workpaths.datadir())
   files.makedirs(workpaths.localdir())

@@ -12,19 +12,14 @@ end
 function M.on_open(workspace)
   local is_ok, trailblazer = pcall(require, "trailblazer")
   if is_ok and trailblazer then
-    pcall(
-      trailblazer.load_trailblazer_state_from_file,
-      workspace.localdir() .. "/trailblazer"
-    )
+    pcall(trailblazer.load_trailblazer_state_from_file, workspace.localdir() .. "/trailblazer")
   end
 end
 
 function M.on_close(workspace)
   local is_ok, trailblazer = pcall(require, "trailblazer")
   if is_ok and trailblazer then
-    trailblazer.save_trailblazer_state_to_file(
-      workspace.localdir() .. "/trailblazer"
-    )
+    trailblazer.save_trailblazer_state_to_file(workspace.localdir() .. "/trailblazer")
   end
 end
 

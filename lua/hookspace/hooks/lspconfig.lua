@@ -24,7 +24,7 @@ local user_opts = vim.deepcopy(default_opts)
 M.lsp_settings = nil
 
 local function read_file(filename)
-  local fd = vim.loop.fs_open(filename, 'r', 438)
+  local fd = vim.loop.fs_open(filename, "r", 438)
   if not fd then
     return nil
   end
@@ -60,25 +60,25 @@ end
 
 local function recursive_sub(tbl, pat, repl)
   for k, v in pairs(tbl) do
-    if type(v) == 'string' then
+    if type(v) == "string" then
       tbl[k] = v:gsub(pat, repl)
-    elseif type(v) == 'table' then
+    elseif type(v) == "table" then
       recursive_sub(v, pat, repl)
     end
   end
 end
 
 local function replace_templates(o, workspace)
-  recursive_sub(o, '{rootdir}', workspace.rootdir())
-  recursive_sub(o, '{datadir}', workspace.datadir())
-  recursive_sub(o, '{localdir}', workspace.localdir())
+  recursive_sub(o, "{rootdir}", workspace.rootdir())
+  recursive_sub(o, "{datadir}", workspace.datadir())
+  recursive_sub(o, "{localdir}", workspace.localdir())
 end
 
 local function read_configs(filename, workspace)
   local config = {}
 
-  local public_file = workspace.datadir() .. '/' .. filename
-  local local_file = workspace.localdir() .. '/' .. filename
+  local public_file = workspace.datadir() .. "/" .. filename
+  local local_file = workspace.localdir() .. "/" .. filename
 
   if user_opts.use_public then
     local o = read_json(public_file) or {}
@@ -114,9 +114,8 @@ function M.server_init(client, init_ret)
   local lsp_config = M.lsp_settings
   if lsp_config then
     local settings = client.config.settings
-    client.config.settings =
-      vim.tbl_deep_extend('force', settings, lsp_config)
-    client.notify('workspace/didChangeConfiguration', {
+    client.config.settings = vim.tbl_deep_extend("force", settings, lsp_config)
+    client.notify("workspace/didChangeConfiguration", {
       settings = client.config.settings,
     })
   end

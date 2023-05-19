@@ -38,11 +38,7 @@ local function to_display(entry)
 end
 
 local function to_entry(record)
-  if
-    not record
-    or not record.rootdir
-    or vim.fn.isdirectory(record.rootdir) < 1
-  then
+  if not record or not record.rootdir or vim.fn.isdirectory(record.rootdir) < 1 then
     return nil
   end
   local meta = workspaces.read_metadata(record.rootdir) or {}
