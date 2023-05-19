@@ -12,15 +12,9 @@ require('packer').use 'midrare/hookspace.nvim'
 ## Usage
 A workspace is a folder that contains a `.hookspace` subfolder. Typically, a workspace is the path to a project repo. You can do three things to a workspace: initialize it, open it, or close it.
 
- - `:HookspaceInit ~/hello_world`
- - `require("hookspace").init(...)`
-
- - `:HookspaceOpen ~/hello_world`
- - `require("hookspace").open(...)`
-
- - `:HookspaceClose`
- - `require("hookspace").close(...)`
-
+ - `:HookspaceInit ~/hello_world` or `require("hookspace").init("~/hello_world")`
+ - `:HookspaceOpen ~/hello_world` or `require("hookspace").open("~/hello_world")`
+ - `:HookspaceClose` or `require("hookspace").close()`
 
 Each workspace event (e.g. `init`, `open`, `close`) triggers an array of hooks in a well-defined order. Every event, aside from `init` (which creates `.hookspace` and populates it with some basic metadata files), does nothing by itself, but relies entirely on its hooks to do all of the work. These hooks are supplied by you when you call `hookspace.setup()`.
 
