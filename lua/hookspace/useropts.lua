@@ -1,7 +1,7 @@
 local M = {}
 
 ---@type boolean
-M.startup = false
+M.autoload = false
 
 ---@type nil|hook|hook[]
 M.on_init = {}

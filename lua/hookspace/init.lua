@@ -196,7 +196,7 @@ local function init_autocmds()
     once = true,
     desc = "open hookspace workspace from cwd",
     callback = function()
-      if useropts.startup and vim.fn.argc() <= 0 then
+      if useropts.autoload and vim.fn.argc() <= 0 then
         local cwd = vim.loop.cwd()
         if cwd then
           M.open(cwd)
