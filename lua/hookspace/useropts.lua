@@ -1,5 +1,8 @@
 local M = {}
 
+---@type boolean
+M.startup = false
+
 ---@type nil|hook|hook[]
 M.on_init = {}
 

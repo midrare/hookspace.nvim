@@ -1,12 +1,13 @@
 local M = {}
 
 local arrays = require("hookspace.luamisc.arrays")
-local paths = require("hookspace.luamisc.paths")
 local tables = require("hookspace.luamisc.tables")
 local history = require("hookspace.history")
 local useropts = require("hookspace.useropts")
 local notify = require("hookspace.notify")
 local workspaces = require("hookspace.workspaces")
+
+local default_opts = vim.deepcopy(useropts)
 
 --- Check if a workspace is currently open
 --- @return boolean is_open if a workspace is open
@@ -22,10 +23,11 @@ function M.open(path)
     notify.error('Cannot open non-existent workspace at "' .. path .. '".')
     return false
   end
+  local now = os.time()
   if workspaces.is_open() then
-    workspaces.close(os.time())
+    workspaces.close(now)
   end
-  workspaces.open(path, os.time())
+  workspaces.open(path, now)
   return true
 end
 
@@ -131,6 +133,33 @@ local function _cmd_rename(tbl)
   end
 end
 
+local function init_autocmds()
+  vim.api.nvim_create_augroup("hookspace", { clear = true })
+
+  vim.api.nvim_create_autocmd({ "VimEnter" }, {
+    group = "hookspace",
+    once = true,
+    desc = "open hookspace workspace from cwd",
+    callback = function()
+      if useropts.startup and vim.fn.argc() <= 0 then
+        local cwd = vim.loop.cwd()
+        if cwd then
+          M.open(cwd)
+        end
+      end
+    end,
+  })
+
+  vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
+    group = "hookspace",
+    callback = function(_)
+      M.close()
+    end,
+    desc = "automatically close hookspace when exiting app",
+  })
+end
+
+
 --- Prepare hookspace for use
 ---@param opts useropts options
 function M.setup(opts)
@@ -138,9 +167,8 @@ function M.setup(opts)
     useropts.verbose = opts.verbose
   end
 
-  useropts.on_init = opts.on_init or useropts.on_init
-  useropts.on_open = opts.on_open or useropts.on_open
-  useropts.on_close = opts.on_close or useropts.on_close
+  tables.overwrite(default_opts, useropts)
+  tables.merge(opts, useropts)
 
   vim.api.nvim_create_user_command("HookspaceInit", function(tbl)
     if tbl and tbl.fargs then
@@ -178,7 +206,7 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("HookspaceClose", function(_)
     M.close()
   end, {
-    desc = "close the currently open workspace",
+    desc = "close a workspace",
     force = true,
     nargs = 0,
   })
@@ -195,14 +223,7 @@ function M.setup(opts)
     nargs = 1,
   })
 
-  vim.api.nvim_create_augroup("hookspace", { clear = true })
-  vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
-    group = "hookspace",
-    callback = function(_)
-      M.close()
-    end,
-    desc = "automatically close hookspace when exiting app",
-  })
+  init_autocmds()
 end
 
 return M
