@@ -23,19 +23,13 @@ function M.open(path)
     notify.error('Cannot open non-existent workspace at "' .. path .. '".')
     return false
   end
-  local now = os.time()
-  if workspaces.is_open() then
-    workspaces.close(now)
-  end
-  workspaces.open(path, now)
+  workspaces.open(path, os.time())
   return true
 end
 
 --- Close the currently open workspace, if open.
 function M.close()
-  if workspaces.is_open() then
-    workspaces.close(os.time())
-  end
+  workspaces.close(os.time())
 end
 
 --- Create a new workspace at the given path
@@ -198,7 +192,7 @@ local function init_autocmds()
     callback = function()
       if useropts.autoload and vim.fn.argc() <= 0 then
         local cwd = vim.loop.cwd()
-        if cwd then
+        if cwd and workspaces.is_workspace(cwd) then
           M.open(cwd)
         end
       end

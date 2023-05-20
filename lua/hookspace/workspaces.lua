@@ -146,7 +146,9 @@ end
 function M.open(rootdir, timestamp)
   assert(rootdir, "expected root dir")
   assert(timestamp, "expected timestamp")
-  assert(not current, "another workspace is already open")
+  if current then
+    M.close(timestamp)
+  end
 
   rootdir = paths.canonical(rootdir)
   local workspace = get_workspace_paths(rootdir)
@@ -169,7 +171,9 @@ end
 ---@param timestamp integer epoch sec to record as last access time
 function M.close(timestamp)
   assert(timestamp, "expected timestamp")
-  assert(current, "cannot close non-open workspace")
+  if not current then
+    return
+  end
 
   files.makedirs(current.datadir())
   files.makedirs(current.localdir())
