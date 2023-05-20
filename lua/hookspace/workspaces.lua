@@ -17,24 +17,19 @@ local function get_file_uid(filename)
   if vim.fn.filereadable(filename) <= 0 then
     return nil
   end
-  local n = files.inode(filename) or files.file_id(filename) or files.created(filename) or files.modified(filename)
+  local n = files.inode(filename) or files.file_id(filename) or files.modified(filename)
   return (n and strings.itoa(n)) or nil
 end
 
-local function get_workspace_paths(rootdir, create)
-  create = create ~= false
+local function get_workspace_paths(rootdir)
   rootdir = paths.canonical(rootdir)
-  local stamp = rootdir .. paths.sep() .. consts.subdir .. paths.sep() .. ".instance"
-
-  if create and vim.fn.filereadable(stamp) <= 0 then
-    files.write_file(stamp)
-  end
 
   local master = {
     rootdir = rootdir,
     datadir = rootdir .. paths.sep() .. consts.subdir,
     localdir = nil,
     metafile = rootdir .. paths.sep() .. consts.subdir .. paths.sep() .. consts.metafile,
+    idfile = rootdir .. paths.sep() .. consts.subdir .. paths.sep() .. ".instance",
   }
 
   local workpaths = {
@@ -47,14 +42,24 @@ local function get_workspace_paths(rootdir, create)
     metafile = function()
       return master.metafile
     end,
-    localdir = function()
+    localdir = function(create)
+      create = create ~= false
       if master.localdir then
         return master.localdir
       end
-      local instance = get_file_uid(stamp)
+
+      if vim.fn.filereadable(master.idfile) <= 0 then
+        if not create then
+          return nil
+        end
+        files.write_file(master.idfile)
+      end
+
+      local instance = get_file_uid(master.idfile)
       if not instance then
         return nil
       end
+
       master.localdir = consts.datadir .. paths.sep() .. instance .. ".wkspc"
       return master.localdir
     end,
@@ -117,7 +122,7 @@ function M.init(rootdir, timestamp)
   assert(timestamp, "expected timestamp")
   rootdir = paths.canonical(rootdir)
 
-  local workpaths = get_workspace_paths(rootdir, true)
+  local workpaths = get_workspace_paths(rootdir)
 
   local metadata = M.read_metadata(rootdir) or {}
   metadata.name = metadata.name or paths.basename(rootdir) or "Unnamed"
