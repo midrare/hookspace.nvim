@@ -159,7 +159,6 @@ local function init_autocmds()
   })
 end
 
-
 --- Prepare hookspace for use
 ---@param opts useropts options
 function M.setup(opts)
