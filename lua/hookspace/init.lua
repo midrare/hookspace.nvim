@@ -133,42 +133,7 @@ local function _cmd_rename(tbl)
   end
 end
 
-local function init_autocmds()
-  vim.api.nvim_create_augroup("hookspace", { clear = true })
-
-  vim.api.nvim_create_autocmd({ "VimEnter" }, {
-    group = "hookspace",
-    once = true,
-    desc = "open hookspace workspace from cwd",
-    callback = function()
-      if useropts.startup and vim.fn.argc() <= 0 then
-        local cwd = vim.loop.cwd()
-        if cwd then
-          M.open(cwd)
-        end
-      end
-    end,
-  })
-
-  vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
-    group = "hookspace",
-    callback = function(_)
-      M.close()
-    end,
-    desc = "automatically close hookspace when exiting app",
-  })
-end
-
---- Prepare hookspace for use
----@param opts useropts options
-function M.setup(opts)
-  if opts.verbose ~= nil and type(opts.verbose) == "number" then
-    useropts.verbose = opts.verbose
-  end
-
-  tables.overwrite(default_opts, useropts)
-  tables.merge(opts, useropts)
-
+local function init_commands()
   vim.api.nvim_create_user_command("HookspaceInit", function(tbl)
     if tbl and tbl.fargs then
       for _, rootdir in ipairs(tbl.fargs) do
@@ -221,7 +186,45 @@ function M.setup(opts)
     force = true,
     nargs = 1,
   })
+end
 
+local function init_autocmds()
+  vim.api.nvim_create_augroup("hookspace", { clear = true })
+
+  vim.api.nvim_create_autocmd({ "VimEnter" }, {
+    group = "hookspace",
+    once = true,
+    desc = "open hookspace workspace from cwd",
+    callback = function()
+      if useropts.startup and vim.fn.argc() <= 0 then
+        local cwd = vim.loop.cwd()
+        if cwd then
+          M.open(cwd)
+        end
+      end
+    end,
+  })
+
+  vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
+    group = "hookspace",
+    callback = function(_)
+      M.close()
+    end,
+    desc = "automatically close hookspace when exiting app",
+  })
+end
+
+--- Prepare hookspace for use
+---@param opts useropts options
+function M.setup(opts)
+  if opts.verbose ~= nil and type(opts.verbose) == "number" then
+    useropts.verbose = opts.verbose
+  end
+
+  tables.overwrite(default_opts, useropts)
+  tables.merge(opts, useropts)
+
+  init_commands()
   init_autocmds()
 end
 
