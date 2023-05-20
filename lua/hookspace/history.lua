@@ -7,9 +7,12 @@ local paths = require("hookspace.luamisc.paths")
 local consts = require("hookspace.consts")
 
 local function is_record_valid(record)
-  return record.rootdir
-    and type(record.rootdir) == "string"
-    and (vim.fn.isdirectory(record.rootdir) == 1 or vim.fn.filereadable(record.rootdir) == 1)
+  if not record.rootdir or type(record.rootdir) ~= "string" then
+    return false
+  end
+
+  local datadir = record.rootdir .. "/" .. consts.subdir
+  return vim.fn.isdirectory(datadir) > 0 or vim.fn.filereadable(datadir) > 0
 end
 
 local function get_last_accessed(record)
