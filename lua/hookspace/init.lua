@@ -40,22 +40,19 @@ function M.init(path)
   workspaces.init(path, os.time())
 end
 
---- Get the currently open workspace
---- @return workspace? wksp current workspace if open
-function M.current()
-  return workspaces.current()
-end
-
 --- Get history of recently-accessed workspaces
 --- @return record[] records containing workspace information
-function M.read_history()
+function M.history()
   return history.read_records()
 end
 
---- Read metadata from a workspace
---- @param rootdir string path to workspace directory or `nil` for current workspace
---- @return workspace? metadata workspace info
-function M.read_metadata(rootdir)
+--- Get workspace info
+--- @param rootdir? string path to workspace or default for current
+--- @return workspace? wksp workspace info
+function M.info(rootdir)
+  if not rootdir then
+    return workspaces.current()
+  end
   return workspaces.read_metadata(rootdir)
 end
 
@@ -137,7 +134,7 @@ local function init_commands()
   })
 
   vim.api.nvim_create_user_command("HookspaceList", function(_)
-    local rootdirs = M.read_history()
+    local rootdirs = M.history()
     arrays.transform(rootdirs, function(o)
       return o.rootdir()
     end)

@@ -60,7 +60,7 @@ local function open_picker(opts)
     .new(opts, {
       prompt_title = opts.title or consts.plugin,
       finder = finders.new_table({
-        results = hookspace.read_history(),
+        results = hookspace.history(),
         entry_maker = to_entry,
       }),
       sorter = conf.values.generic_sorter(opts),
