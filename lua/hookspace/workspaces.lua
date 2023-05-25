@@ -52,16 +52,12 @@ local function get_workspace_paths(rootdir)
     metafile = function()
       return master.metafile
     end,
-    localdir = function(create)
-      create = create ~= false
+    localdir = function()
       if master.localdir then
         return master.localdir
       end
 
       if vim.fn.filereadable(master.idfile) <= 0 then
-        if not create then
-          return nil
-        end
         files.write_file(master.idfile)
       end
 
