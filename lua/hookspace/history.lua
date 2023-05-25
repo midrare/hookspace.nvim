@@ -21,15 +21,24 @@ end
 
 local function is_record_has_path(record, rootdir)
   local c = paths.canonical(record.rootdir)
-  return rootdir == record.rootdir or rootdir == record.rootdir or rootdir == c or rootdir == c
+  return rootdir == record.rootdir
+    or rootdir == record.rootdir
+    or rootdir == c
+    or rootdir == c
 end
 
 local function cmp_last_accessed(rec1, rec2)
   if not rec1.last_accessed and not rec2.last_accessed then
     return 0
-  elseif (rec1.last_accessed and not rec2.last_accessed) or (rec1.last_accessed < rec2.last_accessed) then
+  elseif
+    (rec1.last_accessed and not rec2.last_accessed)
+    or (rec1.last_accessed < rec2.last_accessed)
+  then
     return -1
-  elseif (not rec1.last_accessed and rec2.last_accessed) or (rec1.last_accessed > rec2.last_accessed) then
+  elseif
+    (not rec1.last_accessed and rec2.last_accessed)
+    or (rec1.last_accessed > rec2.last_accessed)
+  then
     return 1
   end
   return 0
