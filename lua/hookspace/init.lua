@@ -40,10 +40,10 @@ function M.init(path)
   workspaces.init(path, os.time())
 end
 
---- Get the directory of the currently open workspace
---- @return string? path to directory of open workspace or `nil`
-function M.get_current_workspace()
-  return workspaces.root_dir()
+--- Get the currently open workspace
+--- @return workspace? wksp current workspace if open
+function M.current()
+  return workspaces.current()
 end
 
 --- Get history of recently-accessed workspaces

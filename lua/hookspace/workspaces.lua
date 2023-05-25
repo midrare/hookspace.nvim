@@ -205,6 +205,11 @@ function M.is_open()
   return current ~= nil
 end
 
+---@return workspace? wksp current workspace if extant
+function M.current()
+  return current
+end
+
 ---@return string? dir root dir of currently open workspace
 function M.root_dir()
   if not current then
