@@ -29,7 +29,7 @@ local function get_workspace_paths(rootdir)
     datadir = rootdir .. paths.sep() .. consts.subdir,
     localdir = nil,
     metafile = rootdir .. paths.sep() .. consts.subdir .. paths.sep() .. consts.metafile,
-    idfile = rootdir .. paths.sep() .. consts.subdir .. paths.sep() .. ".instance",
+    idfile = rootdir .. paths.sep() .. consts.subdir .. paths.sep() .. ".identifier",
   }
 
   local workpaths = {
@@ -55,12 +55,12 @@ local function get_workspace_paths(rootdir)
         files.write_file(master.idfile)
       end
 
-      local instance = get_file_uid(master.idfile)
-      if not instance then
+      local identifier = get_file_uid(master.idfile)
+      if not identifier then
         return nil
       end
 
-      master.localdir = consts.datadir .. paths.sep() .. instance .. ".wkspc"
+      master.localdir = consts.datadir .. paths.sep() .. identifier .. ".wkspc"
       return master.localdir
     end,
   }
@@ -133,7 +133,7 @@ function M.init(rootdir, timestamp)
   files.write_file(workpaths.datadir() .. paths.sep() .. ".ignore", "*")
   files.write_file(workpaths.datadir() .. paths.sep() .. ".tokeignore", "*")
 
-  update_ignorefile(workpaths.datadir() .. paths.sep() .. ".gitignore", { "/.instance" })
+  update_ignorefile(workpaths.datadir() .. paths.sep() .. ".gitignore", { "/.identifier" })
 
   files.makedirs(workpaths.datadir())
   files.makedirs(workpaths.localdir())
