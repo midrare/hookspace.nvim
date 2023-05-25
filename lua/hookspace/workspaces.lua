@@ -70,7 +70,11 @@ local function get_workspace_paths(rootdir)
         return nil
       end
 
-      master.localdir = consts.datadir .. paths.sep() .. identifier .. ".wkspc"
+      master.localdir = consts.datadir
+        .. paths.sep()
+        .. "workspaces"
+        .. paths.sep()
+        .. identifier
       return master.localdir
     end,
   }
