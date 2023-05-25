@@ -59,12 +59,6 @@ function M.read_metadata(rootdir)
   return workspaces.read_metadata(rootdir)
 end
 
---- Write metadata for a workspace
---- @param workspace workspace the metadata to write
-function M.write_metadata(workspace)
-  workspaces.write_metadata(workspace)
-end
-
 --- Check if the directory contains a workspace
 --- @param path string directory to check
 --- @return boolean is_found if a workspace is found
