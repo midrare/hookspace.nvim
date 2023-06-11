@@ -1,7 +1,7 @@
 --[[                  How to use this hook
 ------------------------------------------------------------------
 
-Put your lsp settings in $localdir/lspsettings.json. When you
+Put your lsp settings in $localdir/lspconfig.json. When you
 set up your LSP servers, call the handler provided by the hook.
 
   require("lspconfig")[server_name].setup(conf)({
@@ -16,7 +16,7 @@ set up your LSP servers, call the handler provided by the hook.
 
 local M = {}
 
-local default_opts = { use_public = false, use_local = true }
+local default_opts = {}
 ---@diagnostic disable-next-line: unused-local
 local user_opts = vim.deepcopy(default_opts)
 
@@ -77,20 +77,10 @@ end
 local function read_configs(filename, workspace)
   local config = {}
 
-  local public_file = workspace.datadir() .. "/" .. filename
-  local local_file = workspace.localdir() .. "/" .. filename
-
-  if user_opts.use_public then
-    local o = read_json(public_file) or {}
-    replace_templates(o, workspace)
-    vim.tbl_deep_extend("force", config, o)
-  end
-
-  if user_opts.use_local then
-    local o = read_json(local_file) or {}
-    replace_templates(o, workspace)
-    vim.tbl_deep_extend("force", config, o)
-  end
+  local filename = workspace.localdir() .. "/" .. filename
+  local o = read_json(filename) or {}
+  replace_templates(o, workspace)
+  config = vim.tbl_deep_extend("force", config, o)
 
   return config
 end
@@ -101,7 +91,7 @@ function M.setup(opts)
 end
 
 function M.on_open(workspace)
-  M.lsp_settings = read_configs("lspsettings.json", workspace)
+  M.lsp_settings = read_configs("lspconfig.json", workspace)
 end
 
 ---@diagnostic disable-next-line: unused-local

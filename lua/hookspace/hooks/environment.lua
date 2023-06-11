@@ -1,6 +1,6 @@
 local M = {}
 
-local default_opts = { use_public = false, use_local = true }
+local default_opts = {}
 ---@diagnostic disable-next-line: unused-local
 local user_opts = vim.deepcopy(default_opts)
 
@@ -42,27 +42,17 @@ end
 function M.on_open(workspace)
   old_env = {}
 
-  local public_file = workspace.datadir() .. sep .. "env.json"
-  local local_file = workspace.localdir() .. sep .. "env.json"
+  local new_env = {}
+  local filename = workspace.localdir() .. sep .. "environment.json"
+  if vim.fn.filereadable(filename) >= 1 and user_opts.use_local then
+    local env = read_env_file(workspace, filename) or {}
+    new_env = vim.tbl_deep_extend("force", new_env, env)
+  end
 
-  if vim.fn.filereadable(public_file) >= 1 then
-    local new_env = {}
-
-    if user_opts.use_public then
-      local public_env = read_env_file(workspace, public_file) or {}
-      new_env = vim.tbl_deep_extend("force", new_env, public_env)
-    end
-
-    if user_opts.use_local then
-      local local_env = read_env_file(workspace, local_file) or {}
-      new_env = vim.tbl_deep_extend("force", new_env, local_env)
-    end
-
-    for name, value in pairs(new_env) do
-      if is_var_name_sane(name) then
-        old_env[name] = os.getenv(name) or false
-        vim.fn.setenv(name, value or nil)
-      end
+  for name, value in pairs(new_env) do
+    if is_var_name_sane(name) then
+      old_env[name] = os.getenv(name) or false
+      vim.fn.setenv(name, value or nil)
     end
   end
 end
