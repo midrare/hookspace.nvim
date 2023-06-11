@@ -1,7 +1,11 @@
 local M = {}
 
+local pl = require("plenary")
+
 local arrays = require("hookspace.luamisc.arrays")
+local paths = require("hookspace.luamisc.paths")
 local tables = require("hookspace.luamisc.tables")
+
 local history = require("hookspace.history")
 local useropts = require("hookspace.useropts")
 local notify = require("hookspace.notify")
@@ -54,6 +58,26 @@ function M.info(rootdir)
     return workspaces.current()
   end
   return workspaces.read_metadata(rootdir)
+end
+
+
+--- Copy config files from workspace to local dir
+---@param rootdir? string path to workspace or default for current
+function M.install(rootdir)
+  local meta = workspaces.read_metadata(rootdir)
+  if meta.datadir() and vim.fn.isdirectory(meta.datadir()) > 0 then
+    local files = pl.scandir.scan_dir(meta.datadir(), {
+      hidden = false,
+      add_dirs = false,
+      respect_gitignore = false,
+      silent = true,
+    })
+
+    for _, filename in ipairs(files) do
+      local relname = paths.relpath(filename, meta.datadir())
+      vim.loop.fs_copyfile(filename, meta.localdir() .. "/" .. relname)
+    end
+  end
 end
 
 --- Check if the directory contains a workspace
@@ -118,6 +142,23 @@ local function _cmd_rename(tbl)
   end
 end
 
+local function _cmd_install(tbl)
+  local rootdirs = {}
+
+  local rootdir = workspaces.root_dir()
+  if rootdir then
+    table.insert(rootdirs, rootdir)
+  end
+
+  if tbl and tbl.fargs then
+    vim.list_extend(rootdirs, tbl.fargs)
+  end
+
+  for _, rootdir in ipairs(rootdirs) do
+    M.install(rootdir)
+  end
+end
+
 local function init_commands()
   vim.api.nvim_create_user_command("HookspaceInit", function(tbl)
     if tbl and tbl.fargs then
@@ -130,6 +171,13 @@ local function init_commands()
     desc = "initialize a new workspace",
     force = true,
     nargs = 1,
+    complete = "file",
+  })
+
+  vim.api.nvim_create_user_command("HookspaceInstall", _cmd_install, {
+    desc = "copy config files from repo into local dir",
+    force = true,
+    nargs = "*",
     complete = "file",
   })
 
