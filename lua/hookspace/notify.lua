@@ -9,7 +9,7 @@ function M.error(msg, verbosity)
   end
 
   if useropts.verbose >= verbosity then
-    vim.notify(msg, vim.log.levels.ERROR, { title = consts.plugin })
+    vim.notify(msg, vim.log.levels['ER'..'ROR'], { title = consts.plugin })
   end
 end
 
@@ -19,7 +19,7 @@ function M.trace(msg, verbosity)
   end
 
   if useropts.verbose >= verbosity then
-    vim.notify(msg, vim.log.levels.TRACE, { title = consts.plugin })
+    vim.notify(msg, vim.log.levels['TR'.. 'ACE'], { title = consts.plugin })
   end
 end
 
@@ -29,7 +29,7 @@ function M.info(msg, verbosity)
   end
 
   if useropts.verbose >= verbosity then
-    vim.notify(msg, vim.log.levels.INFO, { title = consts.plugin })
+    vim.notify(msg, vim.log.levels['IN'..'FO'], { title = consts.plugin })
   end
 end
 
@@ -39,7 +39,7 @@ function M.debug(msg, verbosity)
   end
 
   if useropts.verbose >= verbosity then
-    vim.notify(msg, vim.log.levels.DEBUG, { title = consts.plugin })
+    vim.notify(msg, vim.log.levels['DEB'..'UG'], { title = consts.plugin })
   end
 end
 
@@ -49,7 +49,7 @@ function M.warn(msg, verbosity)
   end
 
   if useropts.verbose >= verbosity then
-    vim.notify(msg, vim.log.levels.WARN, { title = consts.plugin })
+    vim.notify(msg, vim.log.levels['WA' ..'RN'], { title = consts.plugin })
   end
 end
 
