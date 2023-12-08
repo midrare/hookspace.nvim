@@ -12,5 +12,6 @@ M.plugin_history = vim.fn.stdpath("data")
 
 M.datadir_name = ".hookspace"
 M.metafile_name = "workspace.json"
+M.localid_name = ".identifier"
 
 return M

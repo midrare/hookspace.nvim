@@ -24,54 +24,50 @@ local function get_file_uid(filename)
 end
 
 local function get_workspace_paths(rootdir)
-  rootdir = paths.canonical(rootdir)
+  local rootdir = paths.canonical(rootdir)
+  local localdir = nil
 
-  local master = {
-    rootdir = rootdir,
-    datadir = rootdir .. paths.sep() .. consts.datadir_name,
-    localdir = nil,
-    metafile = rootdir
-      .. paths.sep()
-      .. consts.datadir_name
-      .. paths.sep()
-      .. consts.metafile_name,
-    idfile = rootdir
-      .. paths.sep()
-      .. consts.datadir_name
-      .. paths.sep()
-      .. ".identifier",
-  }
+  local idfile = rootdir
+    .. paths.sep()
+    .. consts.datadir_name
+    .. paths.sep()
+    .. consts.localid_name
 
   local workpaths = {
     rootdir = function()
-      return master.rootdir
+      return rootdir
     end,
     datadir = function()
-      return master.datadir
+      return rootdir .. paths.sep() .. consts.datadir_name
     end,
     metafile = function()
-      return master.metafile
+      return rootdir
+        .. paths.sep()
+        .. consts.datadir_name
+        .. paths.sep()
+        .. consts.metafile_name
     end,
     localdir = function()
-      if master.localdir then
-        return master.localdir
+      if localdir then
+        return localdir
       end
 
-      if vim.fn.filereadable(master.idfile) <= 0 then
-        files.write_file(master.idfile)
+      if vim.fn.filereadable(idfile) <= 0 then
+        files.write_file(idfile)
       end
 
-      local identifier = get_file_uid(master.idfile)
+      local identifier = get_file_uid(idfile)
       if not identifier then
         return nil
       end
 
-      master.localdir = consts.plugin_datadir
+      localdir = consts.plugin_datadir
         .. paths.sep()
         .. "workspaces"
         .. paths.sep()
         .. identifier
-      return master.localdir
+
+      return localdir
     end,
   }
 
