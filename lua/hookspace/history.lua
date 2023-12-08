@@ -11,7 +11,7 @@ local function is_record_valid(record)
     return false
   end
 
-  local datadir = record.rootdir .. "/" .. consts.subdir
+  local datadir = record.rootdir .. "/" .. consts.datadir_name
   return vim.fn.isdirectory(datadir) > 0 or vim.fn.filereadable(datadir) > 0
 end
 
@@ -47,8 +47,8 @@ end
 local function read()
   local records = {}
 
-  if vim.fn.filereadable(consts.historyfile) == 1 then
-    records = files.read_json(consts.historyfile) or records
+  if vim.fn.filereadable(consts.plugin_history) == 1 then
+    records = files.read_json(consts.plugin_history) or records
     table.sort(records, function(a, b)
       return cmp_last_accessed(a, b) > 0
     end)
@@ -64,7 +64,7 @@ local function write(records)
   table.sort(records, function(a, b)
     return cmp_last_accessed(a, b) > 0
   end)
-  files.write_json(consts.historyfile, records)
+  files.write_json(consts.plugin_history, records)
 end
 
 ---@return record[] records workspace access records

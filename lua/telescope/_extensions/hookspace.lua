@@ -58,7 +58,7 @@ end
 local function open_picker(opts)
   pickers
     .new(opts, {
-      prompt_title = opts.title or consts.plugin,
+      prompt_title = opts.title or consts.plugin_name,
       finder = finders.new_table({
         results = hookspace.history(),
         entry_maker = to_entry,

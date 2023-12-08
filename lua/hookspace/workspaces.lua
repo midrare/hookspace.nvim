@@ -28,16 +28,16 @@ local function get_workspace_paths(rootdir)
 
   local master = {
     rootdir = rootdir,
-    datadir = rootdir .. paths.sep() .. consts.subdir,
+    datadir = rootdir .. paths.sep() .. consts.datadir_name,
     localdir = nil,
     metafile = rootdir
       .. paths.sep()
-      .. consts.subdir
+      .. consts.datadir_name
       .. paths.sep()
-      .. consts.metafile,
+      .. consts.metafile_name,
     idfile = rootdir
       .. paths.sep()
-      .. consts.subdir
+      .. consts.datadir_name
       .. paths.sep()
       .. ".identifier",
   }
@@ -66,7 +66,7 @@ local function get_workspace_paths(rootdir)
         return nil
       end
 
-      master.localdir = consts.datadir
+      master.localdir = consts.plugin_datadir
         .. paths.sep()
         .. "workspaces"
         .. paths.sep()
