@@ -10,7 +10,7 @@ local notify = require("hookspace.notify")
 local consts = require("hookspace.consts")
 local useropts = require("hookspace.useropts")
 
----@type workspace?
+---@type workspace? currently open workspace
 local current = nil
 
 local function get_file_uid(filename)
@@ -23,7 +23,11 @@ local function get_file_uid(filename)
   return (n and strings.itoa(n)) or nil
 end
 
-local function get_workspace_paths(rootdir)
+
+--- calc file paths for metadata files in workspace
+---@param rootdir string path to workspace root
+---@return workspace table containing workspace info
+local function get_workspace(rootdir)
   local rootdir = paths.canonical(rootdir)
   local localdir = nil
 
@@ -129,15 +133,14 @@ end
 function M.init(rootdir, timestamp)
   assert(rootdir, "expected rootdir")
   assert(timestamp, "expected timestamp")
-  rootdir = paths.canonical(rootdir)
+  local rootdir = paths.canonical(rootdir)
+  local workpaths = get_workspace(rootdir)
 
-  local workpaths = get_workspace_paths(rootdir)
+  local meta = M.read_metadata(rootdir) or {}
+  meta.name = meta.name or paths.basename(rootdir) or "Unnamed"
+  meta.created = meta.created or timestamp
+  files.write_json(workpaths.metafile(), meta)
 
-  local metadata = M.read_metadata(rootdir) or {}
-  metadata.name = metadata.name or paths.basename(rootdir) or "Unnamed"
-  metadata.created = metadata.created or timestamp
-
-  files.write_json(workpaths.metafile(), metadata)
   files.write_file(workpaths.datadir() .. paths.sep() .. ".notags")
   files.write_file(workpaths.datadir() .. paths.sep() .. ".ignore", "*")
   files.write_file(workpaths.datadir() .. paths.sep() .. ".tokeignore", "*")
@@ -163,7 +166,7 @@ function M.open(rootdir, timestamp)
   end
 
   rootdir = paths.canonical(rootdir)
-  local workspace = get_workspace_paths(rootdir)
+  local workspace = get_workspace(rootdir)
   if vim.fn.isdirectory(workspace.datadir()) <= 0 then
     notify.error('No workspace to open at "' .. rootdir .. '"')
     return nil
@@ -234,14 +237,14 @@ end
 ---@return boolean is_workspace true if is root dir of a workspace
 function M.is_workspace(rootdir)
   assert(type(rootdir) == "string", "workspace path must be of type string")
-  local info = get_workspace_paths(rootdir)
+  local info = get_workspace(rootdir)
   return vim.fn.isdirectory(info.datadir()) == 1
 end
 
 ---@param rootdir? string path to root of workspace
 ---@return workspace? workspace info
 function M.read_metadata(rootdir)
-  local workspace = rootdir and get_workspace_paths(rootdir) or current
+  local workspace = rootdir and get_workspace(rootdir) or current
   if not workspace then
     return nil
   end
@@ -254,9 +257,11 @@ end
 
 ---@param workspace? workspace workspace info
 function M.write_metadata(workspace)
-  workspace = workspace or current
+  local workspace = workspace or current
   assert(workspace, "expected root dir or already-opened root dir")
-  local meta = { name = workspace.name, created = workspace.created }
+  local meta = files.read_json(workspace.metafile()) or {}
+  meta.name = workspace.name or meta.name
+  meta.created = workspace.created or meta.created
   files.write_json(workspace.metafile(), meta)
 end
 
