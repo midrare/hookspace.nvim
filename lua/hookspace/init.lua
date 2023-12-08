@@ -106,59 +106,6 @@ function M.rename(rootdir, name)
   workspaces.write_metadata(workspace)
 end
 
-local function _cmd_open(tbl)
-  if tbl and tbl.fargs then
-    for _, rootdir in ipairs(tbl.fargs) do
-      if rootdir then
-        M.open(rootdir)
-        break
-      end
-    end
-  end
-end
-
-local function _cmd_show_info(_)
-  local rootdir = workspaces.root_dir()
-  if not rootdir then
-    print("No workspace open")
-    return
-  end
-
-  local metadata = workspaces.read_metadata(rootdir)
-  tables.transform(metadata, function(val)
-    if type(val) == "function" then
-      val = val()
-    end
-    return val
-  end)
-  print(vim.inspect(metadata))
-end
-
-local function _cmd_rename(tbl)
-  local rootdir = workspaces.root_dir()
-  if tbl and tbl.args and rootdir then
-    local name = table.concat(tbl.args, " ")
-    M.rename(rootdir, name)
-  end
-end
-
-local function _cmd_install(tbl)
-  local rootdirs = {}
-
-  local rootdir = workspaces.root_dir()
-  if rootdir then
-    table.insert(rootdirs, rootdir)
-  end
-
-  if tbl and tbl.fargs then
-    vim.list_extend(rootdirs, tbl.fargs)
-  end
-
-  for _, rootdir in ipairs(rootdirs) do
-    M.install(rootdir)
-  end
-end
-
 local function init_commands()
   vim.api.nvim_create_user_command("HookspaceInit", function(tbl)
     if tbl and tbl.fargs then
@@ -174,7 +121,22 @@ local function init_commands()
     complete = "file",
   })
 
-  vim.api.nvim_create_user_command("HookspaceInstall", _cmd_install, {
+  vim.api.nvim_create_user_command("HookspaceInstall", function(tbl)
+    local rootdirs = {}
+
+    local rootdir = workspaces.root_dir()
+    if rootdir then
+      table.insert(rootdirs, rootdir)
+    end
+
+    if tbl and tbl.fargs then
+      vim.list_extend(rootdirs, tbl.fargs)
+    end
+
+    for _, rootdir in ipairs(rootdirs) do
+      M.install(rootdir)
+    end
+  end, {
     desc = "copy config files from repo into local dir",
     force = true,
     nargs = "*",
@@ -193,7 +155,16 @@ local function init_commands()
     nargs = 0,
   })
 
-  vim.api.nvim_create_user_command("HookspaceOpen", _cmd_open, {
+  vim.api.nvim_create_user_command("HookspaceOpen", function(tbl)
+    if tbl and tbl.fargs then
+      for _, rootdir in ipairs(tbl.fargs) do
+        if rootdir then
+          M.open(rootdir)
+          break
+        end
+      end
+    end
+  end, {
     desc = "open a workspace",
     force = true,
     nargs = 1,
@@ -208,13 +179,34 @@ local function init_commands()
     nargs = 0,
   })
 
-  vim.api.nvim_create_user_command("HookspaceInfo", _cmd_show_info, {
+  vim.api.nvim_create_user_command("HookspaceInfo", function(_)
+    local rootdir = workspaces.root_dir()
+    if not rootdir then
+      print("No workspace open")
+      return
+    end
+
+    local metadata = workspaces.read_metadata(rootdir)
+    tables.transform(metadata, function(val)
+      if type(val) == "function" then
+        val = val()
+      end
+      return val
+    end)
+    print(vim.inspect(metadata))
+  end, {
     desc = "show workspace info",
     force = true,
     nargs = 0,
   })
 
-  vim.api.nvim_create_user_command("HookspaceRename", _cmd_rename, {
+  vim.api.nvim_create_user_command("HookspaceRename", function(tbl)
+    local rootdir = workspaces.root_dir()
+    if tbl and tbl.args and rootdir then
+      local name = table.concat(tbl.args, " ")
+      M.rename(rootdir, name)
+    end
+  end, {
     desc = "rename workspace",
     force = true,
     nargs = 1,
