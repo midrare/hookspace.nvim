@@ -44,7 +44,7 @@ local function cmp_last_accessed(rec1, rec2)
   return 0
 end
 
-local function read()
+local function read_records()
   local records = {}
 
   if vim.fn.filereadable(consts.plugin_history) == 1 then
@@ -69,12 +69,12 @@ end
 
 ---@return record[] records workspace access records
 function M.read_records()
-  return read()
+  return read_records()
 end
 
 ---@return string[] rootdirs workspace root dirs
 function M.read_root_dirs()
-  local records = read()
+  local records = read_records()
   arrays.transform(records, function(r)
     return r.rootdir
   end)
@@ -83,7 +83,7 @@ end
 
 ---@param rootdir string workspace root dir
 function M.delete(rootdir)
-  local records = read()
+  local records = read_records()
   arrays.filter(records, function(r)
     return not is_record_has_path(r, rootdir)
   end)
@@ -93,7 +93,7 @@ end
 ---@param src string old workspace root dir
 ---@param dest string new workspace root dir
 function M.move(src, dest)
-  local records = read()
+  local records = read_records()
   arrays.filter(records, function(r)
     return is_record_has_path(r, src)
   end)
@@ -109,7 +109,7 @@ end
 ---@param rootdir string workspace root dir
 ---@param timestamp integer last access timestamp
 function M.touch(rootdir, timestamp)
-  local records = read()
+  local records = read_records()
 
   local is_found = false
   for _, record in ipairs(records) do
