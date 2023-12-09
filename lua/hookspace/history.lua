@@ -15,10 +15,6 @@ local function is_record_valid(record)
   return vim.fn.isdirectory(datadir) > 0 or vim.fn.filereadable(datadir) > 0
 end
 
-local function get_rootdir(record)
-  return record.rootdir
-end
-
 local function is_record_has_path(record, rootdir)
   local c = paths.canonical(record.rootdir)
   return rootdir == record.rootdir
@@ -53,14 +49,14 @@ local function read_records()
       return cmp_last_accessed(a, b) > 0
     end)
     arrays.filter(records, is_record_valid)
-    arrays.uniqify(records, get_rootdir)
+    arrays.uniqify(records, function(r) return r.rootdir end)
   end
 
   return records
 end
 
 local function write(records)
-  arrays.uniqify(records, get_rootdir)
+  arrays.uniqify(records, function(r) return r.rootdir end)
   table.sort(records, function(a, b)
     return cmp_last_accessed(a, b) > 0
   end)
