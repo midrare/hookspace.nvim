@@ -116,7 +116,7 @@ function M.touch(rootdir, timestamp)
   end
 
   if not is_found then
-    local canonical = paths.normpath(paths.normcase(rootdir))
+    local canonical = paths.normpath(rootdir)
     local record = { last_accessed = timestamp, rootdir = canonical }
     table.insert(records, record)
   end
