@@ -1,3 +1,4 @@
 [submodule "lua/hookspace/luamisc"]
 	path = lua/hookspace/luamisc
-	url = git@github.com:midrare/luamisc.git
+	url = https://github.com/midrare/luamisc.git
+	pushurl = git@github.com:midrare/luamisc.git
