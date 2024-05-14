@@ -156,7 +156,7 @@ function M.init(rootdir, timestamp)
 
   update_ignorefile(
     workpaths.datadir() .. paths.sep() .. ".gitignore",
-    { "/.instance" }
+    { "/.instance", "*-user", "*-user.*", }
   )
 
   files.makedirs(workpaths.datadir())
