@@ -69,18 +69,19 @@ local function recursive_sub(tbl, pat, repl)
 end
 
 local function replace_templates(o, workspace)
-  recursive_sub(o, "{rootdir}", workspace.rootdir())
-  recursive_sub(o, "{datadir}", workspace.datadir())
-  recursive_sub(o, "{localdir}", workspace.localdir())
+  recursive_sub(o, "${rootdir}", workspace.rootdir())
+  recursive_sub(o, "${datadir}", workspace.datadir())
+  recursive_sub(o, "${localdir}", workspace.localdir())
 end
 
-local function read_configs(filename, workspace)
+local function read_configs(workspace)
   local config = {}
 
-  local filename = workspace.localdir() .. "/" .. filename
-  local o = read_json(filename) or {}
-  replace_templates(o, workspace)
-  config = vim.tbl_deep_extend("force", config, o)
+  local o1 = read_json(workspace.datadir() .. "/" .. "lspconfig.json") or {}
+  local o2 = read_json(workspace.localdir() .. "/" .. "lspconfig.json") or {}
+
+  config = vim.tbl_deep_extend("force", config, o1, o2)
+  replace_templates(config, workspace)
 
   return config
 end
@@ -91,7 +92,7 @@ function M.setup(opts)
 end
 
 function M.on_open(workspace)
-  M.lsp_settings = read_configs("lspconfig.json", workspace)
+  M.lsp_settings = read_configs(workspace)
 end
 
 ---@diagnostic disable-next-line: unused-local

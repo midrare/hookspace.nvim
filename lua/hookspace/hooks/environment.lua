@@ -28,9 +28,9 @@ local function read_env_file(workspace, filename)
     return nil
   end
   local env = vim.fn.json_decode(plaintext)
-  tbl_sub_all(env, "{rootdir}", workspace.rootdir())
-  tbl_sub_all(env, "{datadir}", workspace.datadir())
-  tbl_sub_all(env, "{localdir}", workspace.localdir())
+  tbl_sub_all(env, "${rootdir}", workspace.rootdir())
+  tbl_sub_all(env, "${datadir}", workspace.datadir())
+  tbl_sub_all(env, "${localdir}", workspace.localdir())
   return env
 end
 
