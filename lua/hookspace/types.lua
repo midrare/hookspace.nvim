@@ -3,6 +3,7 @@
 ---@class workspace
 ---@field name string display name for workspace
 ---@field created integer creation timestamp in epoch secs
+---@field instance fun(): string instance id
 ---@field rootdir fun(): string root dir of workspace
 ---@field localdir fun(): string where local workspace-specific files are be stored
 ---@field datadir fun(): string path to ".hookspace" subdir

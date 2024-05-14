@@ -30,6 +30,7 @@ end
 local function get_workspace(rootdir)
   local rootdir = paths.canonical(rootdir)
   local localdir = nil
+  local instance = nil
 
   local idfile = rootdir
     .. paths.sep()
@@ -60,8 +61,10 @@ local function get_workspace(rootdir)
         files.write_file(idfile)
       end
 
-      local identifier = get_file_uid(idfile)
-      if not identifier then
+      if not instance then
+        instance = get_file_uid(idfile)
+      end
+      if not instance then
         return nil
       end
 
@@ -69,9 +72,15 @@ local function get_workspace(rootdir)
         .. paths.sep()
         .. "workspaces"
         .. paths.sep()
-        .. identifier
+        .. instance
 
       return localdir
+    end,
+    instance = function()
+      if not instance then
+        instance = get_file_uid(idfile)
+      end
+      return instance
     end,
   }
 
@@ -147,7 +156,7 @@ function M.init(rootdir, timestamp)
 
   update_ignorefile(
     workpaths.datadir() .. paths.sep() .. ".gitignore",
-    { "/.identifier" }
+    { "/.instance" }
   )
 
   files.makedirs(workpaths.datadir())
