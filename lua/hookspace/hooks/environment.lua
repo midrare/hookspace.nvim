@@ -38,61 +38,90 @@ local function matchcmp(m1, m2)
   return 0
 end
 
-local function replace_templates(s, workspace)
-  local repls = {
+local function find_pattern(value, patterns, pos)
+  local best = nil
+
+  for _, p in ipairs(patterns) do
+    local start, stop = value:find(p[1], pos)
+    if start ~= nil and stop ~= nil then
+      local m = {
+        start = start,
+        stop = stop,
+        fulltext = value,
+        text = value:sub(start, stop),
+        pattern = p[1],
+        replace = p[2],
+      }
+      if matchcmp(best, m) > 0 then
+        best = m
+      end
+    end
+  end
+
+  return best
+end
+
+
+local function make_patterns(key, workspace)
+  local patterns = {
     {
       "%${[Ee][Nn][Vv]:[%a_][%a%d_ ]-}", function(m)
-        local name = m:match("%${[Ee][Nn][Vv]:(.*)}")
+        local name = m.text:match("%${[Ee][Nn][Vv]:(.*)}")
         return os.getenv(name) or ""
       end
     },
-    { "%${[:;]+}", pathsep },
-    { "%${[\\/]+}", sep },
     { "%${[Rr][Oo][Oo][Tt][Dd][Ii][Rr]}", workspace.rootdir() },
     { "%${[Dd][Aa][Tt][Aa][Dd][Ii[Rr]}", workspace.datadir() },
     { "%${[Ll][Oo][Cc][Aa][Ll[Dd][Ii][Rr]}", workspace.localdir() },
   }
 
-  local init = 1
-  while init <= #s do
-    local best = nil
-
-    for _, p in ipairs(repls) do
-      local start, stop = s:find(p[1], init)
-      if start ~= nil and stop ~= nil then
-        local m = {
-          start = start,
-          stop = stop,
-          pat = p[1],
-          repl = p[2],
-        }
-        if matchcmp(best, m) > 0 then
-          best = m
+  if key:upper():match('PATH$') then
+    table.insert(patterns, {
+      "[:;]", function(m)
+        local s = m.fulltext:sub(1, m.stop + 1)
+        if s:match("^%a:[\\/]$") or s:match("[^%a]%a:[\\/]$") then
+          return m.text
         end
+
+        return pathsep
       end
-    end
-
-    if not best then
-      break
-    end
-
-    local repl = best.repl
-    if type(repl) == "function" then
-      repl = repl(s:sub(best.start, best.stop))
-    end
-
-    s = s:sub(1, best.start - 1) .. repl .. s:sub(best.stop + 1, #s)
-    init = best.start + #repl
+    })
   end
 
-  return s
+  return patterns
+end
+
+
+local function replace_next(str, patterns, pos)
+  local best = find_pattern(str, patterns, pos)
+  if not best then
+    return nil, #str + 1
+  end
+
+  local repstr = type(best.replace) == "function" and best.replace(best) or best.replace
+  local newstr = str:sub(1, best.start - 1) .. repstr .. str:sub(best.stop + 1, #str)
+
+  return newstr, best.start + #repstr
+end
+
+
+local function replace_templates(key, value, workspace)
+  local patterns = make_patterns(key, workspace)
+
+  -- only replace each pattern once (i.e. do not re-run on replaced string)
+  local pos = 1
+  while pos <= #value do
+    value, pos = replace_next(value, patterns, pos)
+  end
+
+  return value
 end
 
 
 local function recursive_sub(tbl, workspace)
   for k, v in pairs(tbl) do
     if type(v) == "string" then
-      tbl[k] = replace_templates(tbl[k], workspace)
+      tbl[k] = replace_templates(k, tbl[k], workspace)
     elseif type(v) == "table" then
       recursive_sub(v)
     end
