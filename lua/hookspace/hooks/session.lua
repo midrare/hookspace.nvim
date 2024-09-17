@@ -103,19 +103,22 @@ function M.on_close(workspace)
 
   write_session(session)
 
-  vim.cmd("silent! %bdelete!")
-  vim.cmd("silent! tabonly!")
-  vim.cmd("silent! only!")
-  vim.cmd("silent! enew!")
+  local exitcode_ok, exitcode = pcall(vim.api.nvim_get_vvar, 'exitcode')
+  if not exitcode_ok or exitcode == nil or exitcode == vim.NIL then
+    vim.cmd("silent! %bdelete!")
+    vim.cmd("silent! tabonly!")
+    vim.cmd("silent! only!")
+    vim.cmd("silent! enew!")
 
-  if vim.fn.exists(":Alpha") then
-    vim.cmd("silent! Alpha")
-  elseif vim.fn.exists(":Dashboard") then
-    vim.cmd("silent! Dashboard")
-  elseif vim.fn.exists(":Startify") then
-    vim.cmd("silent! Startify")
-  elseif vim.fn.exists(":Startup") then
-    vim.cmd("silent! Startup display")
+    if vim.fn.exists(":Alpha") then
+      vim.cmd("silent! Alpha")
+    elseif vim.fn.exists(":Dashboard") then
+      vim.cmd("silent! Dashboard")
+    elseif vim.fn.exists(":Startify") then
+      vim.cmd("silent! Startify")
+    elseif vim.fn.exists(":Startup") then
+      vim.cmd("silent! Startup display")
+    end
   end
 
   if vim.fn.filereadable(before) >= 1 then
