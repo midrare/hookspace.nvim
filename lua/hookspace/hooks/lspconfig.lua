@@ -4,10 +4,21 @@
 Put your lsp settings in $localdir/lspconfig.json. When you
 set up your LSP servers, call the handler provided by the hook.
 
-  require("lspconfig")[server_name].setup(conf)({
+  vim.lsp.config("*", {
     capabilities = vim.lsp.protocol.make_client_capabilities(),
-    on_init = function(client, init_ret)
-      require("hookspace.hooks.lspconfig").server_init(client, init_ret)
+    on_init = function(client, init_result)
+      local hook_ok, hook = pcall(require, 'hookspace.hooks.lspconfig')
+      if hook_ok and hook then
+        client.config.settings = vim.tbl_deep_extend(
+          "force",
+          client.config.settings or {},
+          hook.lsp_settings() or {}
+        )
+        client.notify("workspace/didChangeConfiguration", {
+          settings = client.config.settings,
+        })
+      end
+
       return true
     end
   })
