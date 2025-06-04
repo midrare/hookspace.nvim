@@ -27,7 +27,7 @@ local sep = vim.fn.has("win32") >= 1 and "\\" or "/"
 local pathsep = vim.fn.has("win32") >= 1 and ";" or ":"
 
 ---@type table?
-M.lsp_settings = nil
+local lsp_settings = nil
 
 
 local function read_file(filename)
@@ -81,17 +81,16 @@ function M.setup(opts)
 end
 
 function M.on_open(workspace)
-  M.lsp_settings = read_configs(workspace)
+  lsp_settings = read_configs(workspace)
 end
 
 ---@diagnostic disable-next-line: unused-local
 function M.on_close(workspace)
-  M.lsp_settings = nil
+  lsp_settings = nil
 end
 
----@diagnostic disable-next-line: unused-local
-function M.server_config(server_name)
-  return vim.tbl_deep_extend("force", {}, M.lsp_settings or {})
+function M.lsp_settings()
+  return vim.tbl_deep_extend("force", {}, lsp_settings or {})
 end
 
 return M
